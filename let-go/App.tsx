@@ -12,6 +12,28 @@ export default function App() {
   const [capturedImage, setCapturedImage] = useState<any>(null)
   const cameraRef = useRef<any>(null);
 
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+
+    const realTimePhoto = async () => {
+      if (cameraRef.current) {
+        const photo = await cameraRef.current.takePictureAsync();
+        console.log(photo);
+        setCapturedImage(photo.uri); // Save the image URI
+        setPreviewVisible(false); // Show the preview
+      }
+    };
+
+    if (permission?.granted) {
+      intervalId = setInterval(realTimePhoto, 2000);
+    }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [permission?.granted]);
+
 
   if (!permission) {
     // Camera permissions are still loading
@@ -37,18 +59,20 @@ export default function App() {
     }
   };
 
+ 
+
   function toggleCameraType() {
     setType(current => (current === CameraType.back ? CameraType.front : CameraType.back));
   }
 
-  if (previewVisible && capturedImage) {
+  if (previewVisible && capturedImage) 
     return (
       <View style={styles.container}>
         <Image source={{ uri: capturedImage }} style={styles.preview} />
-        <Button title="Take Another" onPress={() => setPreviewVisible(false)} /> {/* Hide the preview */}
+        <Button title="Take Another" onPress={() => setPreviewVisible(false)} /> 
       </View>
     );
-  }
+  
 
   return (
     <View style={styles.container}>
