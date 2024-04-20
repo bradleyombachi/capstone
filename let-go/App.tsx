@@ -1,8 +1,9 @@
 import { Camera, CameraType, CameraProps } from 'expo-camera';
 import { useState, useRef, useEffect } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Image, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
+import Carousel from 'react-native-reanimated-carousel';
 
 
 export default function App() {
@@ -11,28 +12,9 @@ export default function App() {
   const [previewVisible, setPreviewVisible] = useState(false)
   const [capturedImage, setCapturedImage] = useState<any>(null)
   const cameraRef = useRef<any>(null);
+  const width = Dimensions.get('window').width;
 
-  useEffect(() => {
-    let intervalId: ReturnType<typeof setInterval>;
 
-    const realTimePhoto = async () => {
-      if (cameraRef.current) {
-        const photo = await cameraRef.current.takePictureAsync();
-        console.log(photo);
-        setCapturedImage(photo.uri); // Save the image URI
-        setPreviewVisible(false); // Show the preview
-      }
-    };
-
-    if (permission?.granted) {
-      intervalId = setInterval(realTimePhoto, 2000);
-    }
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [permission?.granted]);
 
 
   if (!permission) {
@@ -54,8 +36,8 @@ export default function App() {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync();
       console.log(photo);
-      setCapturedImage(photo.uri); // Save the image URI
-      setPreviewVisible(true); // Show the preview
+      setCapturedImage(photo.uri); 
+      setPreviewVisible(true);
     }
   };
 
@@ -69,7 +51,9 @@ export default function App() {
     return (
       <View style={styles.container}>
         <Image source={{ uri: capturedImage }} style={styles.preview} />
-        <Button title="Take Another" onPress={() => setPreviewVisible(false)} /> 
+        <TouchableOpacity style={styles.cancelButton} onPress={() => setPreviewVisible(false)} > 
+          <MaterialIcons name="cancel" size={40} color="white" />
+        </TouchableOpacity>
       </View>
     );
   
@@ -79,7 +63,8 @@ export default function App() {
       <Camera style={styles.camera} type={type} ref={cameraRef}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={takePicture}>
-            <Feather name="circle" size={75} color="white" />
+            <Feather name="circle" size={85} color="white" />
+            
           </TouchableOpacity>
         </View>
       </Camera>
@@ -115,5 +100,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative'
+  },
+  cancelButton: {
+    position: 'absolute',
+    right: 20,
+    top: 60
   },
 });
