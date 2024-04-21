@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Image, Dimensions } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 
 
@@ -61,7 +62,9 @@ export default function CameraView() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={takePicture}>
             <Feather name="circle" size={100} color="white" />
-            
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toggleButton} onPress={toggleCameraType}>
+          <MaterialCommunityIcons name="camera-flip-outline" size={30} color="white" />
           </TouchableOpacity>
         </View>
       </Camera>
@@ -101,7 +104,12 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     position: 'absolute',
-    right: 20,
+    left: 20,
     top: 60
   },
+  toggleButton: {
+    position: 'absolute',
+    right: 5,
+    top: 50
+  }
 });
