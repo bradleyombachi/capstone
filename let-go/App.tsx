@@ -1,110 +1,56 @@
-import { Camera, CameraType, CameraProps } from 'expo-camera';
-import { useState, useRef, useEffect } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View, Image, Dimensions } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons';
-import Carousel from 'react-native-reanimated-carousel';
+import { SafeAreaView, Text, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import CameraView from './screens/CameraView';
+import History from './screens/History';
+import Settings from './screens/Settings';
+import { FontAwesome6, Feather, FontAwesome } from '@expo/vector-icons';
 
+const Tab = createBottomTabNavigator();
 
 export default function App() {
-  const [type, setType] = useState(CameraType.back);
-  const [permission, requestPermission] = Camera.useCameraPermissions();
-  const [previewVisible, setPreviewVisible] = useState(false)
-  const [capturedImage, setCapturedImage] = useState<any>(null)
-  const cameraRef = useRef<any>(null);
-  const width = Dimensions.get('window').width;
-
-
-
-
-  if (!permission) {
-    // Camera permissions are still loading
-    return <View />;
-  }
-
-  if (!permission.granted) {
-    // Camera permissions are not granted yet
-    return (
-      <View style={styles.container}>
-        <Text style={{ textAlign: 'center' }}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="grant permission" />
-      </View>
-    );
-  }
-
-  const takePicture = async () => {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync();
-      console.log(photo);
-      setCapturedImage(photo.uri); 
-      setPreviewVisible(true);
-    }
-  };
-
- 
-
-  function toggleCameraType() {
-    setType(current => (current === CameraType.back ? CameraType.front : CameraType.back));
-  }
-
-  if (previewVisible && capturedImage) 
-    return (
-      <View style={styles.container}>
-        <Image source={{ uri: capturedImage }} style={styles.preview} />
-        <TouchableOpacity style={styles.cancelButton} onPress={() => setPreviewVisible(false)} > 
-          <MaterialIcons name="cancel" size={40} color="white" />
-        </TouchableOpacity>
-      </View>
-    );
-  
-
   return (
-    <View style={styles.container}>
-      <Camera style={styles.camera} type={type} ref={cameraRef}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={takePicture}>
-            <Feather name="circle" size={85} color="white" />
-            
-          </TouchableOpacity>
-        </View>
-      </Camera>
-    </View>
+    <NavigationContainer>
+      <Tab.Navigator screenOptions={{
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: '#1a1a1a',
+          height: 100,
+          borderTopWidth: 0,
+        },
+        tabBarInactiveTintColor: 'white',
+        tabBarActiveTintColor: '#1abc9c', 
+        tabBarIconStyle: {
+          marginTop: 15
+        },
+        headerShown: false,
+        }}>
+
+        <Tab.Screen 
+          name="History" 
+          component={History} 
+          options={{
+            tabBarIcon: ({ color, size }) => ( 
+        <FontAwesome6 name="clock-rotate-left" size={size} color={color} />
+            )
+          }}/>
+        <Tab.Screen 
+          name="Camera" 
+          component={CameraView} 
+          options={{
+            tabBarIcon: ({ color, size }) => ( 
+              <FontAwesome name="camera" size={size} color={color} />
+            ),
+          }}/>
+        <Tab.Screen 
+          name="Settings" 
+          component={Settings} 
+          options={{
+            tabBarIcon: ({ color, size }) => ( 
+              <FontAwesome6 name="gear" size={size} color={color} />
+            )
+          }}/>
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  camera: {
-    flex: 1,
-  },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
-    margin: 64,
-  },
-  button: {
-    flex: 1,
-    alignSelf: 'flex-end',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  preview: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative'
-  },
-  cancelButton: {
-    position: 'absolute',
-    right: 20,
-    top: 60
-  },
-});
