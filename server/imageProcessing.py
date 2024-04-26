@@ -7,7 +7,7 @@ def remove_background_and_convert_to_greyscale(inputPath):
     input_path = inputPath
     filename_without_extension = os.path.splitext(os.path.basename(input_path))[0]
 
-    output_path = f"{filename_without_extension}_no-bg.png"
+    output_path = f"./output/{filename_without_extension}_no-bg.png"
     grey_scale_output_path = './greyscale/' + output_path
 
     try:
