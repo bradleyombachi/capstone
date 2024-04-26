@@ -11,6 +11,8 @@
   "dependencies": {
     "@react-navigation/bottom-tabs": "^6.5.20",
     "@react-navigation/native": "^6.1.17",
+    "@tensorflow/tfjs": "^4.18.0",
+    "@tensorflow/tfjs-react-native": "^1.0.0",
     "axios": "^1.6.8",
     "expo": "^50.0.17",
     "expo-camera": "^14.1.3",
