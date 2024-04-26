@@ -1,11 +1,14 @@
 import requests
 from PIL import Image
 from io import BytesIO
+import os
 
-def remove_background_and_convert_to_greyscale():
-    input_path = './assets/legopic.jpg'
-    output_path = 'no-bg.png'
-    grey_scale_output_path = './output/greylego.jpg'
+def remove_background_and_convert_to_greyscale(inputPath):
+    input_path = inputPath
+    filename_without_extension = os.path.splitext(os.path.basename(input_path))[0]
+
+    output_path = f"{filename_without_extension}_no-bg.png"
+    grey_scale_output_path = './greyscale/' + output_path
 
     try:
         # Prepare the form data for the request
