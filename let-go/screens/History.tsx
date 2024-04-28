@@ -45,7 +45,7 @@ const Item = ({brickName, date, brickDescription}: ItemProps) => (
         <Text style={styles.date}>{date}</Text>
       </View>
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'flex-end'}}>
-        <MaterialIcons name="navigate-next" size={24} color="#aba9a9" />
+        <MaterialIcons name="navigate-next" size={24} color="#1abc9c" />
       </View>
     </View>
 
