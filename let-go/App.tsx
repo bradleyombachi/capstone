@@ -5,12 +5,15 @@ import CameraView from './screens/CameraView';
 import History from './screens/History';
 import Settings from './screens/Settings';
 import { FontAwesome6, Feather, FontAwesome } from '@expo/vector-icons';
+import { ThemeProvider } from './contexts/ThemeContext';
+
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
+      <ThemeProvider>
       <Tab.Navigator screenOptions={{
         tabBarShowLabel: false,
         tabBarStyle: {
@@ -51,6 +54,7 @@ export default function App() {
             )
           }}/>
       </Tab.Navigator>
+      </ThemeProvider>
     </NavigationContainer>
   );
 }

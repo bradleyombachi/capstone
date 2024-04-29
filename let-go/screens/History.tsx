@@ -1,6 +1,7 @@
 import React from 'react'
 import { Text, View, StyleSheet, FlatList, Image } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext'
 
 type ItemData = {
   id: string; 
@@ -31,17 +32,19 @@ const DATA: ItemData[] = [
 
 type ItemProps = {
   brickName: string,
-  date: string
-  brickDescription: string
+  date: string,
+  brickDescription: string,
+  isDarkMode: boolean
 };
 
-const Item = ({brickName, date, brickDescription}: ItemProps) => (
-  <View style={styles.item}>
+
+const Item = ({brickName, date, brickDescription, isDarkMode}: ItemProps) => (
+  <View style={[styles.item, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
     <View style={{flex: 1, flexDirection: 'row'}}>
       <Image source={require('../assets/legopic.jpg')} style={styles.brickImage} />
       <View>
-        <Text style={styles.brickName}>{brickName}</Text>
-        <Text style={styles.brickDescription}>{brickDescription}</Text>
+        <Text style={[styles.brickName, {color: isDarkMode ? 'white' : 'black'}]}>{brickName}</Text>
+        <Text style={[styles.brickDescription, {color: isDarkMode ? '#bfbdbd' : '#5c5b5b'}]}>{brickDescription}</Text>
         <Text style={styles.date}>{date}</Text>
       </View>
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'flex-end'}}>
@@ -53,16 +56,19 @@ const Item = ({brickName, date, brickDescription}: ItemProps) => (
 );
 
 const History = () => {
+  const { isDarkMode } = useTheme();
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>History</Text>
+    <View style = {[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
+      <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>History</Text>
       <View style={styles.listItemsContainer}>
       <FlatList
         data={DATA}
-        renderItem={({item}) => <Item 
+        renderItem={({item}) => 
+        <Item 
         brickName={item.brickName} 
         date={item.date}
         brickDescription={item.brickDescription}
+        isDarkMode={isDarkMode}
         />}
         keyExtractor={item => item.id}
       />

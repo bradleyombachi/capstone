@@ -117,8 +117,8 @@ export default function CameraView() {
 
         <TouchableOpacity style={styles.soundToggle} onPress={toggleSound}>
         {soundOn ? (
-        <Octicons name="unmute" size={40} color="white" />) : (
-          <Octicons name="mute" size={40} color="white" />
+        <Octicons name="unmute" size={35} color="white" />) : (
+          <Octicons name="mute" size={35} color="white" />
         )}
         </TouchableOpacity>
       </Camera>
@@ -159,16 +159,16 @@ const styles = StyleSheet.create({
   cancelButton: {
     position: 'absolute',
     left: 20,
-    top: 80
+    top: 60
   },
   toggleButton: {
     position: 'absolute',
-    right: 40,
-    top: 80
+    right: 20,
+    top: 60
   },
   soundToggle: {
     position: 'absolute',
-    bottom: 45,
+    bottom: 50,
     left: 50,
   }
 });

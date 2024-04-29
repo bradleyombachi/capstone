@@ -1,56 +1,57 @@
 import React, {useState} from 'react'
 import { ScrollView, Text, View, StyleSheet, Switch } from 'react-native'
+import { useTheme } from '../contexts/ThemeContext'
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
 
 
 const Settings = () => {
+  const { isDarkMode, toggleTheme } = useTheme();
 
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useState("#f2f2f2")
-
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-  
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
+      <Text style={[styles.title, {color: isDarkMode ? 'white' : 'black'}]}>Settings</Text>
       <ScrollView scrollEnabled={false}>
-      <Text style={styles.visibility}>VISIBILITY</Text>
-      <View style = {styles.listContainer}>
+      <Text style={[styles.visibility, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>VISIBILITY</Text>
+      <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
         <View style = {styles.listItem}>
-          <Text style={styles.listText}>High Contrast Mode</Text>
+          <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>High Contrast Mode</Text>
           <View style={styles.highContrast}>
           <Switch
-        trackColor={{false: '#767577', true: '#81b0ff'}}
-        thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+        trackColor={{false: '#767577', true: '#1abc9c'}}
+        thumbColor={isDarkMode ? 'white' : 'white'}
         ios_backgroundColor="#3e3e3e"
-        onValueChange={toggleSwitch}
-        value={isEnabled}
+        onValueChange={toggleTheme}
+        value={isDarkMode}
       />
         </View>
         </View>
-        <View style={styles.divider}></View>
+        <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
         <View style={styles.listItem}>
-          <Text style={styles.listText}> Font Size </Text>
+          <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Font Size </Text>
+          <View style={{flex: 1, alignItems: 'flex-end'}}>
+            <Text style={{color: '#787878', fontSize: 16}}>
+              16
+            </Text>
+          </View>
         </View>
-        <View style={styles.divider}></View>
       </View>
 
-      <Text style={styles.audio}>AUDIO</Text>
-      <View style={styles.listContainer}>
+      <Text style={[styles.audio, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>AUDIO</Text>
+      <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
           <View style={styles.volumeText}>
-            <Text style={styles.listText}>
+            <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>
               Volume
             </Text>
           </View>
             <View style={styles.volumeSliderContainer}>
-              <MultiSlider 
+              <MultiSlider
+              selectedStyle={{backgroundColor: '#1abc9c'}}
                 />
             </View>
-    <View style={styles.divider}></View>
+    <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
             <View style={styles.listItem}>
-              <Text style={styles.listText}>
+              <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>
                 Voice Language
               </Text>
               <View style={{flex: 1, alignItems: 'flex-end'}}>
@@ -71,7 +72,6 @@ export default Settings
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
     //alignItems: 'flex-start'
   },
   title: {
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     alignContent: 'center'
   },
   listText: {
-    fontSize: 17,
+    fontSize: 16,
     alignContent: 'center',
     fontWeight: '400',
   },
@@ -130,7 +130,6 @@ const styles = StyleSheet.create({
   },
   audio: {
     marginTop: 10,
-    color: '#787878',
     paddingHorizontal: 40
   },
   volumeSliderContainer: {
@@ -142,7 +141,8 @@ const styles = StyleSheet.create({
     alignContent: 'center'
   },
   languageText: {
-    color: "#787878"
+    color: "#787878",
+    fontSize: 17,
   }
 
 
