@@ -2,6 +2,6 @@ uvicorn
 fastapi
 python-multipart
 Pillow
-tensorflow
 numpy
 scikit-learn
+tensorflow==2.15.0

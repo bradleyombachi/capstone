@@ -18,23 +18,33 @@ class ImageData(BaseModel):
     filename: str
     data: str  # This will hold the base64 encoded file data
 
-def find_dominant_color(image_path, num_clusters=1):
+def find_dominant_color(image_path, num_clusters=1, black_threshold=10):
     # Load image
     image = Image.open(image_path)
+    # Convert image to RGB
+    image = image.convert('RGB')
     # Resize image to speed up processing
     image = image.resize((100, 100))
     # Convert image to numpy array
     image_np = np.array(image)
-    # Reshape array to be a list of RGB colors
+    # Flatten the array and filter out black or near-black pixels
     pixels = image_np.reshape((image_np.shape[0] * image_np.shape[1], 3))
-    
+    filtered_pixels = pixels[np.all(pixels > black_threshold, axis=1)]  # Filter out black pixels
+
+    # Check if there are enough pixels left after filtering
+    if filtered_pixels.size == 0:
+        return '#000000'  # Return black if no significant color found
+
     # Use k-means clustering to find the most common color
     kmeans = KMeans(n_clusters=num_clusters)
-    kmeans.fit(pixels)
+    kmeans.fit(filtered_pixels)
     # Get the RGB values of the dominant color
     dominant_color = kmeans.cluster_centers_[0].astype(int)
     
+    # Convert RGB values to hexadecimal string
     return '#{:02x}{:02x}{:02x}'.format(dominant_color[0], dominant_color[1], dominant_color[2])
+
+
 
 
 upload_directory = "./uploaded_images"
@@ -68,9 +78,10 @@ async def create_upload_file(image_data: ImageData):
       
     filename_without_extension = os.path.splitext(os.path.basename(file_path))[0]
 
+    greyscale = remove_background_and_convert_to_greyscale(file_path)
     output_path = os.path.join("output", f"{filename_without_extension}_no-bg.png")
     color = find_dominant_color(output_path)
-    greyscale = remove_background_and_convert_to_greyscale(file_path)
+
     # Here you could continue processing the image as needed
 
     return {"filename": image_data.filename, "path": file_path, "color": color}
