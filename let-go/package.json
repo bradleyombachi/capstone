@@ -24,6 +24,7 @@
     "node-fetch": "^3.3.2",
     "react": "18.2.0",
     "react-native": "^0.73.6",
+    "react-native-dropdown-picker": "^5.4.6",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.14.0",
     "react-native-reanimated-carousel": "^3.5.1",
