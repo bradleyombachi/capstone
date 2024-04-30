@@ -1,55 +1,40 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, HTTPException
 import os
 import shutil
 from imageProcessing import *
-# import tensorflow as tf
-# from tensorflow import keras
-# import numpy as np
+from pydantic import BaseModel
+import base64
+import logging
+from PIL import Image
+import numpy as np
+from sklearn.cluster import KMeans
 
-#model = tf.keras.models.load_model('model_DenseNet201.h5')
 
-# def guess_legos(images_urls, model):
-#   global img
-
-#   # Define the class indices
-#   class_indices = {'beam 1m': 0, 'beam 1x2': 1, 'brick 1x1': 2, 'brick 1x2': 3, 'brick 1x3': 4, 'brick 1x4': 5,
-#                    'brick 2x2': 6, 'brick 2x3': 7, 'brick 2x4': 8, 'brick bow 1x3': 9, 'brick bow 1x4': 10,
-#                    'brick corner 1x2x2': 11, 'brick d16 w cross': 12, 'bush 2m friction - cross axle': 13,
-#                    'connector peg w knob': 14, 'cross block fork 2x2': 15, 'curved brick 2 knobs': 16,
-#                    'flat tile 1x1': 17, 'flat tile 1x2': 18, 'flat tile 2x2': 19, 'flat tile corner 2x2': 20,
-#                    'flat tile round 2x2': 21, 'lever 2m': 22, 'lever 3m': 23, 'peg with friction': 24, 'plate 1x1': 25,
-#                    'plate 1x2': 26, 'plate 1x2 with 1 knob': 27, 'plate 1x3': 28, 'plate 2 knobs 2x2': 29,
-#                    'plate 2x2': 30, 'plate 2x3': 31, 'plate 2x4': 32, 'plate corner 2x2': 33,
-#                    'roof corner inside tile 2x2': 34, 'roof corner outside tile 2x2': 35, 'roof tile 1x1': 36,
-#                    'roof tile 1x2': 37, 'roof tile 1x3': 38, 'roof tile 1x4': 39, 'roof tile 2x2': 40,
-#                    'roof tile 2x3': 41, 'roof tile inside 3x3': 42, 'roof tile outside 3x3': 43, 'round brick 1x1': 44,
-#                    'technic brick 1x2': 45}
-#   labels = dict((v, k) for k, v in class_indices.items())
-
-#   # Initialize a list to store predictions
-# #   predictions = []
-
-#   # Process each image URL
-#   for url in images_urls:
-#     img_path = tf.keras.utils.get_file(f"{url.split('/')[-1]}", url)
-#     img = tf.keras.preprocessing.image.load_img(img_path, target_size=(224, 224))
-#     img = tf.keras.preprocessing.image.img_to_array(img)
-#     img = np.expand_dims(img, axis=0)
-#     img = tf.keras.applications.mobilenet_v2.preprocess_input(img)
-
-#     # Predict the label
-#     pred = model.predict(img)
-#     pred_class = np.argmax(pred, axis=1)
-#     pred_label = labels[pred_class[0]]
-
-#     # Append the prediction to the list with its URL
-#     predictions.append({"url": url, "label": pred_label})
-
-#   # Return the list of predictions
-#   return predictions
-
+logging.basicConfig(level=logging.DEBUG)
 
 app = FastAPI()
+
+class ImageData(BaseModel):
+    filename: str
+    data: str  # This will hold the base64 encoded file data
+
+def find_dominant_color(image_path, num_clusters=1):
+    # Load image
+    image = Image.open(image_path)
+    # Resize image to speed up processing
+    image = image.resize((100, 100))
+    # Convert image to numpy array
+    image_np = np.array(image)
+    # Reshape array to be a list of RGB colors
+    pixels = image_np.reshape((image_np.shape[0] * image_np.shape[1], 3))
+    
+    # Use k-means clustering to find the most common color
+    kmeans = KMeans(n_clusters=num_clusters)
+    kmeans.fit(pixels)
+    # Get the RGB values of the dominant color
+    dominant_color = kmeans.cluster_centers_[0].astype(int)
+    
+    return '#{:02x}{:02x}{:02x}'.format(dominant_color[0], dominant_color[1], dominant_color[2])
 
 
 upload_directory = "./uploaded_images"
@@ -60,18 +45,32 @@ async def root():
 
 
 @app.post("/identify")
-async def create_upload_file(file: UploadFile):
-    file_path = os.path.join(upload_directory, file.filename)
+async def create_upload_file(image_data: ImageData):
+    file_path = os.path.join(upload_directory, image_data.filename)
     
-    # Save the uploaded file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Check if data URI scheme is present and strip it
+    header, _, data = image_data.data.partition(",")
+    if header.startswith('data') and ';' in header:
+        data = data  # use data part after comma if header is present
+    else:
+        data = image_data.data  # use raw data if no header is present
 
+    # Decode the base64 string
+    try:
+        file_bytes = base64.b64decode(data, validate=True)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid base64 string: " + str(e))
+
+
+    # Save the decoded bytes to a file
+    with open(file_path, "wb") as file:
+        file.write(file_bytes)
+      
+    filename_without_extension = os.path.splitext(os.path.basename(file_path))[0]
+
+    output_path = os.path.join("output", f"{filename_without_extension}_no-bg.png")
+    color = find_dominant_color(output_path)
     greyscale = remove_background_and_convert_to_greyscale(file_path)
-    #predictions = guess_legos(greyscale,model)
-    #print("Predictions:", predictions)
+    # Here you could continue processing the image as needed
 
-
-    
-    return {"filename": file.filename, "path": file_path}
-    #return {"prediction": prediction}
+    return {"filename": image_data.filename, "path": file_path, "color": color}

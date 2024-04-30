@@ -3,3 +3,5 @@ fastapi
 python-multipart
 Pillow
 tensorflow
+numpy
+scikit-learn
