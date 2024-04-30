@@ -35,7 +35,7 @@ async function uploadFileFromBase64Uri(fileUri: string): Promise<void> {
       };
 
       // Use fetch API to send the POST request to your server endpoint
-      const uploadResponse = await fetch('http://13.59.29.50:8000/identify', {
+      const uploadResponse = await fetch('http://3.144.149.173:8000/identify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

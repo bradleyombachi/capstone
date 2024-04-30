@@ -3,7 +3,29 @@ from PIL import Image
 from io import BytesIO
 import os
 
-def remove_background_and_convert_to_greyscale(inputPath):
+# def crop_to_center_square(image_path):
+#     # Load the image
+#     img = Image.open(image_path)
+
+#     # Calculate the center square coordinates
+#     original_width, original_height = img.size
+#     center_x, center_y = original_width // 2, original_height // 2
+#     half_square_size = 112  # Half of 255
+
+#     left = center_x - half_square_size
+#     top = center_y - half_square_size
+#     right = center_x + half_square_size
+#     bottom = center_y + half_square_size
+
+#     # Crop the image
+#     cropped_img = img.crop((left, top, right, bottom))
+
+#     # Save or return the cropped image
+#     cropped_img.save(image_path)
+#     print(f'Cropped image saved as {image_path}')
+
+
+def remove_background_and_convert_to_greyscale(inputPath):  
     input_path = inputPath
     filename_without_extension = os.path.splitext(os.path.basename(input_path))[0]
 
@@ -21,7 +43,7 @@ def remove_background_and_convert_to_greyscale(inputPath):
                 'size': (None, 'auto')
             }
             headers = {
-                'X-Api-Key': 'MEWWaAWxEuXpBJtLBAQBxzNu'
+                'X-Api-Key': 'ZUho38RByEv2TDmXciiqAqW9'
             }
 
             # Make the request to remove.bg API
@@ -39,6 +61,7 @@ def remove_background_and_convert_to_greyscale(inputPath):
             # Read the image with removed background and convert to greyscale
             image = Image.open(output_path)
             grey_image = image.convert('L')  # Convert to greyscale
+            #crop_to_center_square(grey_image)
             grey_image.save(grey_scale_output_path)
             print('Background removal and greyscale conversion completed successfully.')
             return(grey_scale_output_path)
