@@ -1,8 +1,9 @@
 import React, {useState} from 'react'
-import { ScrollView, Text, View, StyleSheet, Switch } from 'react-native'
+import { ScrollView, Text, View, StyleSheet, Switch, TouchableOpacity } from 'react-native'
 import { useTheme } from '../contexts/ThemeContext'
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
-
+// import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Entypo } from '@expo/vector-icons';
 
 
 const Settings = () => {
@@ -11,6 +12,7 @@ const Settings = () => {
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
       <Text style={[styles.title, {color: isDarkMode ? 'white' : 'black'}]}>Settings</Text>
+      
       <ScrollView scrollEnabled={false}>
       <Text style={[styles.visibility, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>VISIBILITY</Text>
       <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
@@ -27,12 +29,24 @@ const Settings = () => {
         </View>
         </View>
         <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
-        <View style={styles.listItem}>
+        <TouchableOpacity style={styles.listItem}>
           <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Font Size </Text>
-          <View style={{flex: 1, alignItems: 'flex-end'}}>
+          <View style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end'}}>
             <Text style={{color: '#787878', fontSize: 16}}>
               16
             </Text>
+            <View style={{justifyContent: 'center'}}>
+          <Entypo name="select-arrows" size={16} color="#787878" />
+          </View>
+          </View>
+        </TouchableOpacity>
+
+        <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
+
+        <View style={styles.listItem}>
+        <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Color Theme </Text>
+        <View style={{flex: 1, alignItems: 'flex-end', backgroundColor: "#1abc9c", marginLeft: 160, borderRadius: 10}}>
+          <Text>   </Text>
           </View>
         </View>
       </View>
@@ -142,7 +156,7 @@ const styles = StyleSheet.create({
   },
   languageText: {
     color: "#787878",
-    fontSize: 17,
+    fontSize: 16,
   }
 
 
