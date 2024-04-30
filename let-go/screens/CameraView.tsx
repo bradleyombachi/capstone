@@ -11,58 +11,6 @@ import Slider from '@react-native-community/slider';
 
 
 
-async function uploadFileFromBase64Uri(fileUri: string): Promise<void> {
-  try {
-    // Fetch the file from the URI
-    const response = await fetch(fileUri);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const blob = await response.blob();
-
-    // Convert blob to base64
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onloadend = async () => {
-      const base64data = reader.result;  // this now includes the base64 data URI prefix
-      //console.log('Base64 version of the file:', base64data);
-
-      // Extract filename from URI or define a default
-      const filename = fileUri.split('/').pop() || 'default_filename.png';
-
-      // Define the JSON payload to send
-      const jsonPayload = {
-        filename: filename,
-        data: base64data  // Include both filename and base64 encoded data
-      };
-
-      // Use fetch API to send the POST request to your server endpoint
-      const uploadResponse = await fetch('http://18.191.156.145:8000/identify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(jsonPayload),  // Send the JSON payload
-      });
-
-      // Check if the upload was successful
-      if (!uploadResponse.ok) {
-        throw new Error(`HTTP error! Status: ${uploadResponse.status}`);
-      }
-
-      // Handle the response data from the upload
-      const result = await uploadResponse.json();
-      console.log('File uploaded successfully:', result);
-    };
-  } catch (error) {
-    console.error('Failed to upload the file:', error);
-  }
-}
-
-
-
-
-
 export default function CameraView() {
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = Camera.useCameraPermissions();
@@ -75,10 +23,67 @@ export default function CameraView() {
   const [showPopup, setShowPopup] = useState(false);
   const [zoom, setZoom] = useState(0); // State for zoom level
   const [focusDepth, setFocusDepth] = useState(1); // State for focus depth
+  const [prediction, setPrediction] = useState(''); 
 
+  async function uploadFileFromBase64Uri(fileUri: string): Promise<void> {
+    try {
+      // Fetch the file from the URI
+      const response = await fetch(fileUri);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const blob = await response.blob();
+  
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result;  // this now includes the base64 data URI prefix
+        //console.log('Base64 version of the file:', base64data);
+  
+        // Extract filename from URI or define a default
+        const filename = fileUri.split('/').pop() || 'default_filename.png';
+  
+        // Define the JSON payload to send
+        const jsonPayload = {
+          filename: filename,
+          data: base64data  // Include both filename and base64 encoded data
+        };
+  
+        // Use fetch API to send the POST request to your server endpoint
+        const uploadResponse = await fetch('http://18.191.207.245:8000/identify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(jsonPayload),  // Send the JSON payload
+        });
+  
+        // Check if the upload was successful
+        if (!uploadResponse.ok) {
+          throw new Error(`HTTP error! Status: ${uploadResponse.status}`);
+        }
+  
+        // Handle the response data from the upload
+        const result = await uploadResponse.json();
+        setPrediction(result.Prediction)
+        console.log('File uploaded successfully:', result);
+      };
+    } catch (error) {
+      console.error('Failed to upload the file:', error);
+    }
+  }
 
-
-
+  useEffect(() => {
+    console.log("Current prediction:", prediction);
+    if (prediction) {
+      setShowPopup(true);
+      setTimeout(() => {
+        setShowPopup(false);
+      }, 5000);
+    }  
+  }, [prediction]);
+  
   if (!permission) {
     // Camera permissions are still loading
     return <View />;
@@ -112,7 +117,7 @@ export default function CameraView() {
       setShowPopup(false); // Hide the popup after 5 seconds
     }, 5000); // 5000 milliseconds = 5 seconds
   };
- 
+
   const toggleSound = () => {
     setSoundOn(prevState => !prevState);
   }
@@ -130,6 +135,7 @@ export default function CameraView() {
         </TouchableOpacity>
       </View>
     );
+
   
 
 
@@ -155,7 +161,7 @@ export default function CameraView() {
             style={styles.zoomSlider} 
             minimumValue={0} 
             maximumValue={1} 
-            minimumTrackTintColor="#FFFFFF" 
+            minimumTrackTintColor="white"
             maximumTrackTintColor="#000000" 
             onValueChange={setZoom}
           />
@@ -163,7 +169,7 @@ export default function CameraView() {
             style={styles.focusSlider} 
             minimumValue={0} 
             maximumValue={1} 
-            minimumTrackTintColor="#FFFFFF" 
+            minimumTrackTintColor="white" 
             maximumTrackTintColor="#000000" 
             onValueChange={setFocusDepth}
           />
@@ -171,6 +177,13 @@ export default function CameraView() {
             {soundOn ? <Octicons name="unmute" size={35} color="white" /> : <Octicons name="mute" size={35} color="white" />}
           </TouchableOpacity>
         </Camera>
+        {showPopup ? (
+            <View style={styles.popup}>
+              <Text>{prediction}</Text>
+            </View>
+          ) : (
+            null
+          )}
       </View>
     );
 }
@@ -179,12 +192,13 @@ const styles = StyleSheet.create({
   zoomSlider: {
     position: 'absolute',
     width: '100%',
-    bottom: 80,
+    alignSelf: 'center',
+    bottom: 120,
   },
   focusSlider: {
     position: 'absolute',
     width: '100%',
-    bottom: 120,
+    bottom: 150,
   },
   container: {
     flex: 1,
