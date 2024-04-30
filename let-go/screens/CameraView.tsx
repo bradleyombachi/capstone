@@ -5,6 +5,43 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Octicons } from '@expo/vector-icons';
+import RNFS from 'react-native-fs';
+
+
+async function uploadFileFromUri(fileUri: string): Promise<void> {
+  try {
+    // Fetch the file from the URI
+    const response = await fetch(fileUri);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const blob = await response.blob();
+    console.log('File blob created from URI:', blob);
+
+    // Create an instance of FormData
+    const formData = new FormData();
+    formData.append('file', blob, 'test.png'); // Send only the file
+
+    // Use fetch API to send the POST request to your server endpoint
+    const uploadResponse = await fetch('http://18.216.209.57:8000/identify', {
+      method: 'POST',
+      body: formData, // Send the FormData with the file
+      // No headers for 'Content-Type' needed; it's set automatically by FormData
+    });
+
+    // Check if the upload was successful
+    if (!uploadResponse.ok) {
+      throw new Error(`HTTP error! Status: ${uploadResponse.status}`);
+    }
+
+    // Handle the response data from the upload
+    const result = await uploadResponse.json();
+    console.log('File uploaded successfully:', result);
+  } catch (error) {
+    console.error('Failed to upload the file:', error);
+  }
+}
+
 
 
 export default function CameraView() {
@@ -79,6 +116,8 @@ export default function CameraView() {
       console.log(photo);
       setCapturedImage(photo.uri); 
       setPreviewVisible(true);
+      let prediction = uploadFileFromUri(photo.uri);
+      console.log(prediction);
     }
   };
 
