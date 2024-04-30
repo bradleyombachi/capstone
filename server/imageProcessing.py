@@ -80,7 +80,7 @@ def remove_background_and_convert_to_greyscale(inputPath):
                 'size': (None, 'auto')
             }
             headers = {
-                'X-Api-Key': 'ZUho38RByEv2TDmXciiqAqW9'
+                'X-Api-Key': 'WxtBKr7BjSSTZQdXv5ZiXBMM'
             }
 
             # Make the request to remove.bg API
