@@ -2,6 +2,8 @@ import requests
 from PIL import Image
 from io import BytesIO
 import os
+import cv2
+import numpy as np
 
 # def crop_to_center_square(image_path):
 #     # Load the image
@@ -23,6 +25,41 @@ import os
 #     # Save or return the cropped image
 #     cropped_img.save(image_path)
 #     print(f'Cropped image saved as {image_path}')
+def detect_and_save_overlay_edges(image_path, output_path, low_threshold=100, high_threshold=200, alpha=0.5):
+    """
+    Detects edges in a grayscale image using the Canny edge detection algorithm, overlays this on the original
+    grayscale image, and saves the result to a file.
+    """
+    # Load the image in grayscale mode
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    
+    # Check if the image is loaded properly
+    if image is None:
+        raise FileNotFoundError("The image path specified does not exist or the image could not be loaded.")
+    
+    # Apply GaussianBlur to reduce noise and improve edge detection
+    blurred_image = cv2.GaussianBlur(image, (5, 5), 0)
+    
+    # Apply Canny edge detector
+    edges = cv2.Canny(blurred_image, low_threshold, high_threshold)
+    
+    # Convert grayscale image back to 3 channels to match edges for overlay
+    image_colored = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+    edges_colored = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+    
+    # Ensure the image dimensions are the same
+    if image_colored.shape[:2] != edges_colored.shape[:2]:
+        # Resize the edges image to match the original image's size
+        edges_colored = cv2.resize(edges_colored, (image_colored.shape[1], image_colored.shape[0]))
+
+    # Overlay the edges on the original image
+    overlaid_image = cv2.addWeighted(image_colored, alpha, edges_colored, 1 - alpha, 0)
+    
+    # Save the overlaid image
+    cv2.imwrite(output_path, overlaid_image)
+
+
+
 
 
 def remove_background_and_convert_to_greyscale(inputPath):  
@@ -63,6 +100,7 @@ def remove_background_and_convert_to_greyscale(inputPath):
             grey_image = image.convert('L')  # Convert to greyscale
             #crop_to_center_square(grey_image)
             grey_image.save(grey_scale_output_path)
+            #detect_and_save_overlay_edges(grey_scale_output_path,grey_scale_output_path)
             print('Background removal and greyscale conversion completed successfully.')
             return(grey_scale_output_path)
 
