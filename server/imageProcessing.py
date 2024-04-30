@@ -7,8 +7,11 @@ def remove_background_and_convert_to_greyscale(inputPath):
     input_path = inputPath
     filename_without_extension = os.path.splitext(os.path.basename(input_path))[0]
 
-    output_path = f"./output/{filename_without_extension}_no-bg.png"
-    grey_scale_output_path = './greyscale/' + output_path
+    output_path = os.path.join("output", f"{filename_without_extension}_no-bg.png")
+
+    # Path for the greyscale image, with "greyscale" in its filename
+    grey_scale_filename = f"{filename_without_extension}_greyscale.png"
+    grey_scale_output_path = os.path.join("greyscale", grey_scale_filename)
 
     try:
         # Prepare the form data for the request
@@ -38,6 +41,7 @@ def remove_background_and_convert_to_greyscale(inputPath):
             grey_image = image.convert('L')  # Convert to greyscale
             grey_image.save(grey_scale_output_path)
             print('Background removal and greyscale conversion completed successfully.')
+            return(grey_scale_output_path)
 
     except Exception as error:
         print('Failed to process image:', error)
