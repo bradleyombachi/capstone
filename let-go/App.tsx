@@ -14,7 +14,9 @@ export default function App() {
   return (
     <NavigationContainer>
       <ThemeProvider>
-      <Tab.Navigator screenOptions={{
+      <Tab.Navigator  
+      initialRouteName="Camera"
+      screenOptions={{
         tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: '#1a1a1a',
@@ -27,6 +29,7 @@ export default function App() {
           marginTop: 15
         },
         headerShown: false,
+        
         }}>
 
         <Tab.Screen 
