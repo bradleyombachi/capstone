@@ -5,6 +5,8 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Octicons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
+
 //import RNFS from 'react-native-fs';
 
 
@@ -35,7 +37,7 @@ async function uploadFileFromBase64Uri(fileUri: string): Promise<void> {
       };
 
       // Use fetch API to send the POST request to your server endpoint
-      const uploadResponse = await fetch('http://3.144.149.173:8000/identify', {
+      const uploadResponse = await fetch('http://18.191.156.145:8000/identify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -65,12 +67,15 @@ export default function CameraView() {
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [previewVisible, setPreviewVisible] = useState(false)
-  const [capturedImage, setCapturedImage] = useState<any>(null)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null); // Corrected type here
   const [soundOn, setSoundOn] = useState(false)
-  const cameraRef = useRef<any>(null);
+  const cameraRef = useRef<Camera>(null);  // Typed as Camera
   const width = Dimensions.get('window').width;
   const [modalVisible, setModalVisible] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [zoom, setZoom] = useState(0); // State for zoom level
+  const [focusDepth, setFocusDepth] = useState(1); // State for focus depth
+
 
 
 
@@ -128,44 +133,59 @@ export default function CameraView() {
   
 
 
-  return (
-    <View 
-    style={styles.container}
-    >
-      <Camera 
-        style={styles.camera} 
-        type={type} 
-        ref={cameraRef} 
-        autoFocus={AutoFocus.on}
-        focusDepth={1}
+    return (
+      <View style={styles.container}>
+        <Camera 
+          style={styles.camera} 
+          type={type} 
+          ref={cameraRef} 
+          autoFocus={AutoFocus.on}
+          focusDepth={focusDepth} // Now controlled by state
+          zoom={zoom}  // Now controlled by state
         >
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={takePicture}>
-            <Feather name="circle" size={100} color="white" />
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.button} onPress={takePicture}>
+              <Feather name="circle" size={100} color="white" />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.toggleButton} onPress={() => setType(prevType => prevType === CameraType.back ? CameraType.front : CameraType.back)}>
+            <MaterialCommunityIcons name="camera-flip-outline" size={30} color="white" />
           </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.toggleButton} onPress={toggleCameraType}>
-          <MaterialCommunityIcons name="camera-flip-outline" size={30} color="white" />
+          <Slider 
+            style={styles.zoomSlider} 
+            minimumValue={0} 
+            maximumValue={1} 
+            minimumTrackTintColor="#FFFFFF" 
+            maximumTrackTintColor="#000000" 
+            onValueChange={setZoom}
+          />
+          <Slider 
+            style={styles.focusSlider} 
+            minimumValue={0} 
+            maximumValue={1} 
+            minimumTrackTintColor="#FFFFFF" 
+            maximumTrackTintColor="#000000" 
+            onValueChange={setFocusDepth}
+          />
+          <TouchableOpacity style={styles.soundToggle} onPress={() => setSoundOn(!soundOn)}>
+            {soundOn ? <Octicons name="unmute" size={35} color="white" /> : <Octicons name="mute" size={35} color="white" />}
           </TouchableOpacity>
-          <View style={styles.popup}>
-      {showPopup && (
-        <View style={styles.popup}>
-          <Text style={{color: 'white', fontSize: 30}}>ur mom</Text>
-        </View>
-      )}
-    </View>
-        <TouchableOpacity style={styles.soundToggle} onPress={toggleSound}>
-        {soundOn ? (
-        <Octicons name="unmute" size={35} color="white" />) : (
-          <Octicons name="mute" size={35} color="white" />
-        )}
-        </TouchableOpacity>
-      </Camera>
-    </View>
-  );
+        </Camera>
+      </View>
+    );
 }
 
 const styles = StyleSheet.create({
+  zoomSlider: {
+    position: 'absolute',
+    width: '100%',
+    bottom: 80,
+  },
+  focusSlider: {
+    position: 'absolute',
+    width: '100%',
+    bottom: 120,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
