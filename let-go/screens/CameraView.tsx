@@ -1,4 +1,4 @@
-import { Camera, CameraType, CameraProps, AutoFocus } from 'expo-camera';
+import { Camera, CameraType, CameraProps, AutoFocus } from 'expo-camera/legacy';
 import { useState, useRef, useEffect } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Image, Dimensions, Modal, Alert } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ import Slider from '@react-native-community/slider';
 
 
 export default function CameraView() {
-  const [type, setType] = useState(CameraType.back);
+  const [type, setType] = useState<CameraType>('back');
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [previewVisible, setPreviewVisible] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null); // Corrected type here

@@ -1,6 +1,25 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
-  }
+    "strict": true,
+    "jsx": "react-jsx",  // Add this line for React 17+ support
+    "esModuleInterop": true,  // Recommended for interoperability between CommonJS and ES Modules
+    "allowSyntheticDefaultImports": true,  // Allows default imports from modules with no default export
+    "target": "es5",  // Ensures compatibility with older browsers
+    "lib": ["dom", "dom.iterable", "esnext"],  // Includes necessary libraries
+    "skipLibCheck": true,  // Skips type checking of declaration files
+    "moduleResolution": "node",  // Use Node.js module resolution strategy
+    "resolveJsonModule": true,  // Allows importing of JSON files as modules
+    "isolatedModules": true  // Ensures each file can be transpiled without depending on other files
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/**/*.ts",
+    "**/**/*.tsx",
+    "<path-to-your-source>.ts",
+    "<path-to-your-source>.tsx",
+    "src"],  // Adjust according to your project's directory structure
+  "exclude": ["node_modules", "build"]
 }
