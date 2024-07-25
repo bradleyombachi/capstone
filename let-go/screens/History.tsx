@@ -2,6 +2,8 @@ import React from 'react'
 import { Text, View, StyleSheet, FlatList, Image } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext'
+import { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 
 type ItemData = {
   id: string; 
@@ -57,6 +59,26 @@ const Item = ({brickName, date, brickDescription, isDarkMode}: ItemProps) => (
 
 const History = () => {
   const { isDarkMode } = useTheme();
+  const [brickName, setBrickName] = useState("");
+
+  useEffect(() => {
+    const fetchBrickName = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/'); // Replace with your actual backend URL
+        setBrickName(response.data.brickName);
+      } catch (error) {
+        console.error("Error fetching brick name: ", error);
+      }
+    };
+
+    fetchBrickName();
+  }, []);
+
+  const updatedData = DATA.map(item => ({
+    ...item,
+    brickName: brickName || item.brickName, // Use fetched brickName or fallback to original item name
+  }));
+ 
   return (
     <View style = {[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
       <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>History</Text>
