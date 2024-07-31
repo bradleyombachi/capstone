@@ -1,4 +1,4 @@
-import { Camera, CameraType, CameraProps, AutoFocus } from 'expo-camera';
+import { Camera, CameraType, CameraProps, AutoFocus } from 'expo-camera/legacy';
 import { useState, useRef, useEffect } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Image, Dimensions, Modal, Alert } from 'react-native';  // Added Slider
 import { Feather, Ionicons, MaterialIcons, MaterialCommunityIcons, Octicons } from '@expo/vector-icons';

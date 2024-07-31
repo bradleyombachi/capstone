@@ -106,8 +106,9 @@ export default function CameraView() {
       console.log(photo);
       setCapturedImage(photo.uri); 
       setPreviewVisible(true);
-      let prediction = uploadFileFromBase64Uri(photo.uri);
-      
+      await uploadFileFromBase64Uri(photo.uri);
+      // let prediction = uploadFileFromBase64Uri(photo.uri);
+      // console.log(prediction);
     }
   };
 

@@ -64,7 +64,7 @@ const History = () => {
   useEffect(() => {
     const fetchBrickName = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/'); // Replace with your actual backend URL
+        const response = await axios.get("http://localhost:19006/"); // Replace with your actual backend URL
         setBrickName(response.data.brickName);
       } catch (error) {
         console.error("Error fetching brick name: ", error);
