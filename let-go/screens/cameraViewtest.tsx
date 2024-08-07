@@ -8,7 +8,8 @@ import Slider from '@react-native-community/slider';
 
 
 
-export default function CameraView() {
+
+export default function CameraViewTest() {
   const [type, setType] = useState(CameraType.back);
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -32,12 +33,57 @@ export default function CameraView() {
   const takePicture = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync();
-      console.log(photo);
+      //console.log(photo);
       setCapturedImage(photo.uri); 
+      uploadImage(photo.uri);
       setPreviewVisible(true);
-      // Handle file upload and prediction here
     }
   };
+
+  async function uploadImage(uri: string): Promise<void> {
+    try {
+      console.log('Starting image upload...');
+      const response = await fetch(uri);
+      if (!response.ok) {
+        throw new Error(`Http error! Status: ${response.status}`);
+      }
+      const blob = await response.blob();
+  
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result;
+        console.log('Image converted to base64');
+  
+        const filename = uri.split('/').pop() || 'default_filename.png';
+        console.log(`Filename: ${filename}`);
+  
+        const jsonPayload = {
+          filename: filename,
+          data: base64data
+        };
+  
+        console.log('Sending upload request...');
+        // to test with emulator use localhost instead of the ip address
+        const uploadResponse = await fetch("http://localhost:8000/upload", {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(jsonPayload)
+        });
+  
+        if (!uploadResponse.ok) {
+          throw new Error(`HTTP error! Status: ${uploadResponse.status}`);
+        }
+  
+        console.log('Raw server response:', await uploadResponse.text());
+        alert('Image uploaded successfully!');
+      };
+    } catch (error) {
+      console.error('Failed to upload the file:', error);
+    }
+  }
 
   if (previewVisible && capturedImage) {
     return (

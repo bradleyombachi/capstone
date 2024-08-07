@@ -59,25 +59,6 @@ const Item = ({brickName, date, brickDescription, isDarkMode}: ItemProps) => (
 
 const History = () => {
   const { isDarkMode } = useTheme();
-  const [brickName, setBrickName] = useState("");
-
-  useEffect(() => {
-    const fetchBrickName = async () => {
-      try {
-        const response = await axios.get("http://localhost:19006/"); // Replace with your actual backend URL
-        setBrickName(response.data.brickName);
-      } catch (error) {
-        console.error("Error fetching brick name: ", error);
-      }
-    };
-
-    fetchBrickName();
-  }, []);
-
-  const updatedData = DATA.map(item => ({
-    ...item,
-    brickName: brickName || item.brickName, // Use fetched brickName or fallback to original item name
-  }));
  
   return (
     <View style = {[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
