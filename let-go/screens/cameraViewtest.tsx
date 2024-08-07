@@ -65,7 +65,7 @@ export default function CameraViewTest() {
   
         console.log('Sending upload request...');
         // to test with emulator use localhost instead of the ip address
-        const uploadResponse = await fetch("http://localhost:8000/upload", {
+        const uploadResponse = await fetch("http://192.168.254.61:8000/upload", {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json'

@@ -15,6 +15,6 @@ app.add_middleware(
 
 app.include_router(api_router)
 
-
+# run the file manually to test on ios
 if __name__ == "__main__":
     uvicorn.run(app, host="192.168.254.61", port=8000)
