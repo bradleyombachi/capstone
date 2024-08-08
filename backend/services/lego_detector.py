@@ -2,7 +2,20 @@ import cv2
 import os 
 import uuid 
 import numpy as np 
+import base64
 
+
+# Get the current script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the path to the uploads directory
+uploads_dir = os.path.join(script_dir, '..', 'uploads')
+
+# construct the path to input dir
+input_dir = os.path.join(script_dir, '..', 'input')
+
+# construct the path to input dir
+output_dir = os.path.join(script_dir, '..', 'output')
 
 
 # function to calculate the average of pixels darker than 50
@@ -94,21 +107,66 @@ def process_image (image_path, bg_image_path, output_dir):
         cv2.imwrite(f"{output_dir}/{unique_filename}", crop_img)
         cv2.rectangle(img_withrectangle, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
+
     return bricks_data
 
 
+def process_frame(image_data, bg_image_path): 
+    # decode the base 64 image 
+    nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
+    image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # Read the background image
+    image_bg = cv2.imread(bg_image_path)
+    if image_bg is None:
+        raise ValueError(f"Background image not found at path: {bg_image_path}")
 
-# Get the current script directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
+    # adjust the background to the same size as the input image 
+    image_bg = cv2.resize(image_bg, (image_input.shape[1], image_input.shape[0]), interpolation=cv2.INTER_AREA)
 
-# Construct the path to the uploads directory
-uploads_dir = os.path.join(script_dir, '..', 'uploads')
+    # convert images into grayscale 
+    image_bg_gray = cv2.cvtColor(image_bg, cv2.COLOR_BGR2GRAY)
+    image_input_gray = cv2.cvtColor(image_input, cv2.COLOR_BGR2GRAY)
 
-# construct the path to input dir
-input_dir = os.path.join(script_dir, '..', 'input')
+    # calculate the difference between the background and the input image
+    diff_gray = cv2.absdiff(image_bg_gray, image_input_gray)
 
-# construct the path to input dir
-output_dir = os.path.join(script_dir, '..', 'output')
+    # gaussian blur to smooth the pixels
+    diff_gray_blur = cv2.GaussianBlur(diff_gray, (5, 5), 0)
+
+    # find threshold to convert to binary image using Otsu's method
+    ret, image_treshold = cv2.threshold(diff_gray_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # find contours
+    arr_cnt, _ = cv2.findContours(image_treshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # filter the valid contours
+    height, width, _ = image_input.shape
+    valid_contours = []
+
+    for contour in arr_cnt:
+        ca = cv2.contourArea(contour)
+        x, y, w, h = cv2.boundingRect(contour)
+        aspect_ratio = float(w) / h
+        edge_noise = x == 0 or y == 0 or (x + w) == width or (y + h) == height
+        if ca > 1300 and aspect_ratio <= 6 and not edge_noise:
+            valid_contours.append([x, y, w, h])  # Ensure correct format
+
+    # img_withcontours = image_input.copy()
+    # cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
+    # contimage_path = os.path.join(output_dir, "contimage.jpg")
+    # cv2.imwrite(contimage_path, img_withcontours)
+    
+    # img_withrectangle = image_input.copy()
+    # for x, y, w, h in valid_contours:
+    #     cv2.rectangle(img_withrectangle, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    # rectimage_path = os.path.join(output_dir, "rectimage.jpg")
+    # cv2.imwrite(rectimage_path, img_withrectangle)
+
+    return valid_contours
+
+
+
 
 # Construct the full path to the user image
 user_image_name = "318B2DF1-B57C-4033-9547-FBDFF6F2FA9C.jpg"
@@ -119,7 +177,7 @@ bg_image_name = "background_backlit_B.jpg"
 bg_image_path = os.path.join(input_dir, bg_image_name)
 
 # Now call the process_image function with the full path
-bricks = process_image(user_image_path, bg_image_path, output_dir)
+#bricks = process_image(user_image_path, bg_image_path, output_dir)
 
 # Example usage
-print(bricks)
+#print(bricks)

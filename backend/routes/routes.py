@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
+from services import process_frame
 import os
 import base64
 
@@ -44,3 +45,39 @@ async def upload_file(payload: ImagePayload):
         error_msg = f"Error uploading file: {str(e)}"
         print(error_msg)
         raise HTTPException(status_code=500, detail=error_msg)
+
+
+
+# Get the current script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+# construct the path to input dir
+input_dir = os.path.join(script_dir, '..', 'input')
+
+# construct the full path to the bg image 
+bg_image_name = "background_backlit_B.jpg"
+bg_image_path = os.path.join(input_dir, bg_image_name)
+
+@router.websocket('/ws')
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            try:
+                data = await websocket.receive_text()
+                print("Received data from client")
+                valid_contours = process_frame(data, bg_image_path)
+                await websocket.send_json(valid_contours)
+                print("Sent contours to client")
+            except WebSocketDisconnect:
+                print("Client disconnected")
+                break
+            except Exception as e:
+                print(f"Error processing frame: {str(e)}")
+                await websocket.send_json({"error": str(e)})
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+    finally:
+        await websocket.close()
+        print("WebSocket connection closed")
