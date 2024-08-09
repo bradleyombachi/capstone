@@ -152,16 +152,16 @@ def process_frame(image_data, bg_image_path):
         if ca > 1300 and aspect_ratio <= 6 and not edge_noise:
             valid_contours.append([x, y, w, h])  # Ensure correct format
 
-    # img_withcontours = image_input.copy()
-    # cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
-    # contimage_path = os.path.join(output_dir, "contimage.jpg")
-    # cv2.imwrite(contimage_path, img_withcontours)
+    img_withcontours = image_input.copy()
+    cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
+    contimage_path = os.path.join(output_dir, "contimage.jpg")
+    cv2.imwrite(contimage_path, img_withcontours)
     
-    # img_withrectangle = image_input.copy()
-    # for x, y, w, h in valid_contours:
-    #     cv2.rectangle(img_withrectangle, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    # rectimage_path = os.path.join(output_dir, "rectimage.jpg")
-    # cv2.imwrite(rectimage_path, img_withrectangle)
+    img_withrectangle = image_input.copy()
+    for x, y, w, h in valid_contours:
+        cv2.rectangle(img_withrectangle, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    rectimage_path = os.path.join(output_dir, "rectimage.jpg")
+    cv2.imwrite(rectimage_path, img_withrectangle)
 
     return valid_contours
 

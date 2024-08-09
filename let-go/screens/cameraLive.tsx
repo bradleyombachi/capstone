@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Camera, CameraType } from 'expo-camera/legacy';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -11,6 +11,7 @@ export default function CameraViewTest() {
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([]);
   const cameraRef = useRef<Camera | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const animatedBoxesRef = useRef<Map<number, any>>(new Map());
 
   useEffect(() => {
     const ws = new WebSocket('ws://192.168.254.61:8000/ws');
@@ -24,7 +25,8 @@ export default function CameraViewTest() {
         const boxes: BoundingBox[] = JSON.parse(e.data);
         console.log('Received boxes:', boxes);
         if (Array.isArray(boxes) && boxes.every(box => Array.isArray(box) && box.length === 4 )) {
-            setBoundingBoxes(boxes)
+            updateAnimatedBoxes(boxes);
+            setBoundingBoxes(boxes);
         }else {
             console.error("Invalid bounding box format received: ", boxes)
         }
@@ -55,14 +57,14 @@ export default function CameraViewTest() {
     if (permission?.granted) {
       const interval = setInterval(() => {
         sendFrameToServer();
-      }, 1000); // Send frame every second
+      }, 1); // Send frame every second
       return () => clearInterval(interval);
     }
   }, [permission]);
 
   const sendFrameToServer = async () => {
     if (cameraRef.current && wsRef.current) {
-      const photo = await cameraRef.current.takePictureAsync({ base64: true });
+      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.3, exif: false });
       const imageData = photo.base64;
       if (imageData && wsRef.current.readyState === WebSocket.OPEN) {
         console.log('Sending image data to server'); // Debug print
@@ -70,6 +72,50 @@ export default function CameraViewTest() {
       }
     }
   };
+
+  //function to animate bounding boxes 
+  const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
+    boxes.forEach((box, index) => {
+      if (!animatedBoxesRef.current.has(index)) {
+        animatedBoxesRef.current.set(index, {
+          left: new Animated.Value(box[0]),
+          top: new Animated.Value(box[1]),
+          width: new Animated.Value(box[2]),
+          height: new Animated.Value(box[3]),
+        });
+      } else {
+        const animBox = animatedBoxesRef.current.get(index);
+        Animated.timing(animBox.left, {
+          toValue: box[0],
+          duration: 100,
+          useNativeDriver: false,
+        }).start();
+        Animated.timing(animBox.top, {
+          toValue: box[1],
+          duration: 100,
+          useNativeDriver: false,
+        }).start();
+        Animated.timing(animBox.width, {
+          toValue: box[2],
+          duration: 100,
+          useNativeDriver: false,
+        }).start();
+        Animated.timing(animBox.height, {
+          toValue: box[3],
+          duration: 100,
+          useNativeDriver: false,
+        }).start();
+      }
+    });
+
+    // Clean up animatedBoxesRef for boxes that no longer exist
+    animatedBoxesRef.current.forEach((_, key) => {
+      if (!boxes[key]) {
+        animatedBoxesRef.current.delete(key);
+      }
+    });
+  };
+
 
   if (!permission) return <View />;
   if (!permission.granted) {
@@ -83,10 +129,26 @@ export default function CameraViewTest() {
     );
   }
 
-  //scaling the the bounding box size relative to the window
-  const windowDimensions = Dimensions.get('window');
-  const scaleX = 1;
-  const scaleY = 1;
+  const renderAnimatedBoxes = () => {
+    return boundingBoxes.map((_, index) => {
+      const animBox = animatedBoxesRef.current.get(index);
+      if (!animBox) return null;
+      return (
+        <Animated.View
+          key={index}
+          style={{
+            position: 'absolute',
+            borderColor: 'green',
+            borderWidth: 2,
+            left: animBox.left,
+            top: animBox.top,
+            width: animBox.width,
+            height: animBox.height,
+          }}
+        />
+      );
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -98,20 +160,7 @@ export default function CameraViewTest() {
             <MaterialCommunityIcons name="camera-flip-outline" size={30} color="white" />
           </TouchableOpacity>
         </View>
-        {boundingBoxes.map((box, index) => (
-          <View
-            key={index}
-            style={{
-                position: 'absolute',
-                borderColor: 'green',
-                borderWidth: 2,
-                left: box[0] * scaleX,
-                top: box[1] * scaleY,
-                width: box[2] * scaleX,
-                height: box[3] * scaleY,
-            }}
-          />
-        ))}
+        {renderAnimatedBoxes()}
       </Camera>
     </View>
   );
