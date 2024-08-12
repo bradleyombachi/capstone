@@ -110,37 +110,30 @@ def process_image (image_path, bg_image_path, output_dir):
 
     return bricks_data
 
-
 def process_frame(image_data, bg_image_path): 
-    # decode the base 64 image 
+    # Decode the base 64 image 
     nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
     image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     
-    # Read the background image
+    # Read and resize the background image
     image_bg = cv2.imread(bg_image_path)
     if image_bg is None:
         raise ValueError(f"Background image not found at path: {bg_image_path}")
 
-    # adjust the background to the same size as the input image 
     image_bg = cv2.resize(image_bg, (image_input.shape[1], image_input.shape[0]), interpolation=cv2.INTER_AREA)
 
-    # convert images into grayscale 
+    # Convert images to grayscale 
     image_bg_gray = cv2.cvtColor(image_bg, cv2.COLOR_BGR2GRAY)
     image_input_gray = cv2.cvtColor(image_input, cv2.COLOR_BGR2GRAY)
 
-    # calculate the difference between the background and the input image
+    # Calculate the difference between the background and the input image
     diff_gray = cv2.absdiff(image_bg_gray, image_input_gray)
-
-    # gaussian blur to smooth the pixels
     diff_gray_blur = cv2.GaussianBlur(diff_gray, (5, 5), 0)
+    ret, image_threshold = cv2.threshold(diff_gray_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    # find threshold to convert to binary image using Otsu's method
-    ret, image_treshold = cv2.threshold(diff_gray_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Find contours
+    arr_cnt, _ = cv2.findContours(image_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # find contours
-    arr_cnt, _ = cv2.findContours(image_treshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # filter the valid contours
     height, width, _ = image_input.shape
     valid_contours = []
 
@@ -149,8 +142,14 @@ def process_frame(image_data, bg_image_path):
         x, y, w, h = cv2.boundingRect(contour)
         aspect_ratio = float(w) / h
         edge_noise = x == 0 or y == 0 or (x + w) == width or (y + h) == height
+
         if ca > 1300 and aspect_ratio <= 6 and not edge_noise:
-            valid_contours.append([x, y, w, h])  # Ensure correct format
+            # Normalize coordinates by the width and height of the image
+            norm_x = x / width
+            norm_y = y / height
+            norm_w = w / width
+            norm_h = h / height
+            valid_contours.append([norm_x, norm_y, norm_w, norm_h])
 
     img_withcontours = image_input.copy()
     cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
@@ -159,12 +158,23 @@ def process_frame(image_data, bg_image_path):
     
     img_withrectangle = image_input.copy()
     for x, y, w, h in valid_contours:
-        cv2.rectangle(img_withrectangle, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        # Scale back to original dimensions for drawing
+        x_scaled = int(x * width)
+        y_scaled = int(y * height)
+        w_scaled = int(w * width)
+        h_scaled = int(h * height)
+        cv2.rectangle(img_withrectangle, (x_scaled, y_scaled), (x_scaled + w_scaled, y_scaled + h_scaled), (0, 255, 0), 2)
+
     rectimage_path = os.path.join(output_dir, "rectimage.jpg")
     cv2.imwrite(rectimage_path, img_withrectangle)
 
+
     return valid_contours
 
+
+
+
+    
 
 
 

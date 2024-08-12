@@ -12,6 +12,7 @@ export default function CameraViewTest() {
   const cameraRef = useRef<Camera | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const animatedBoxesRef = useRef<Map<number, any>>(new Map());
+  const [yOffsetAdjustment, setYOffsetAdjustment] = useState(-0.055);
 
   useEffect(() => {
     const ws = new WebSocket('ws://192.168.254.61:8000/ws');
@@ -57,7 +58,7 @@ export default function CameraViewTest() {
     if (permission?.granted) {
       const interval = setInterval(() => {
         sendFrameToServer();
-      }, 1); // Send frame every second
+      }, 0.1); // Send frame every second
       return () => clearInterval(interval);
     }
   }, [permission]);
@@ -74,47 +75,62 @@ export default function CameraViewTest() {
   };
 
   //function to animate bounding boxes 
-  const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
+  // function to animate bounding boxes 
+  // function to animate bounding boxes 
+const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
+    // Get the actual size of the camera preview
+    const { width: previewWidth, height: previewHeight } = Dimensions.get('window'); 
+
     boxes.forEach((box, index) => {
-      if (!animatedBoxesRef.current.has(index)) {
-        animatedBoxesRef.current.set(index, {
-          left: new Animated.Value(box[0]),
-          top: new Animated.Value(box[1]),
-          width: new Animated.Value(box[2]),
-          height: new Animated.Value(box[3]),
-        });
-      } else {
-        const animBox = animatedBoxesRef.current.get(index);
-        Animated.timing(animBox.left, {
-          toValue: box[0],
-          duration: 100,
-          useNativeDriver: false,
-        }).start();
-        Animated.timing(animBox.top, {
-          toValue: box[1],
-          duration: 100,
-          useNativeDriver: false,
-        }).start();
-        Animated.timing(animBox.width, {
-          toValue: box[2],
-          duration: 100,
-          useNativeDriver: false,
-        }).start();
-        Animated.timing(animBox.height, {
-          toValue: box[3],
-          duration: 100,
-          useNativeDriver: false,
-        }).start();
-      }
+        const [normX, normY, normW, normH] = box;
+
+        // Scale the normalized coordinates back to screen dimensions
+        const scaledX = normX * previewWidth;
+        const scaledY = normY * previewHeight + (yOffsetAdjustment * previewHeight);
+        const scaledW = normW * previewWidth;
+        const scaledH = normH * previewHeight;
+
+        if (!animatedBoxesRef.current.has(index)) {
+            animatedBoxesRef.current.set(index, {
+                left: new Animated.Value(scaledX),
+                top: new Animated.Value(scaledY),
+                width: new Animated.Value(scaledW),
+                height: new Animated.Value(scaledH),
+            });
+        } else {
+            const animBox = animatedBoxesRef.current.get(index);
+            Animated.timing(animBox.left, {
+                toValue: scaledX,
+                duration: 100,
+                useNativeDriver: false,
+            }).start();
+            Animated.timing(animBox.top, {
+                toValue: scaledY,
+                duration: 100,
+                useNativeDriver: false,
+            }).start();
+            Animated.timing(animBox.width, {
+                toValue: scaledW,
+                duration: 100,
+                useNativeDriver: false,
+            }).start();
+            Animated.timing(animBox.height, {
+                toValue: scaledH,
+                duration: 100,
+                useNativeDriver: false,
+            }).start();
+        }
     });
 
     // Clean up animatedBoxesRef for boxes that no longer exist
     animatedBoxesRef.current.forEach((_, key) => {
-      if (!boxes[key]) {
-        animatedBoxesRef.current.delete(key);
-      }
+        if (!boxes[key]) {
+            animatedBoxesRef.current.delete(key);
+        }
     });
-  };
+};
+
+
 
 
   if (!permission) return <View />;
