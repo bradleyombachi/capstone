@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from services import process_frame
 import os
 import base64
+import tensorflow as tf
 
 router = APIRouter()
 
@@ -51,6 +52,8 @@ async def upload_file(payload: ImagePayload):
 # Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Construct the path to the uploads directory
+model_dir = os.path.join(script_dir, '..', 'models/Densnet_169_20.keras')
 
 # construct the path to input dir
 input_dir = os.path.join(script_dir, '..', 'input')
@@ -62,12 +65,20 @@ bg_image_path = os.path.join(input_dir, bg_image_name)
 @router.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+
+    # load the model on booting 
+    try: 
+        model = tf.keras.models.load_model(model_dir)
+        print("Model loaded sucessfuly.")
+    except Exception as e:
+        print("Failed to load the model {e}")
+
     try:
         while True:
             try:
                 data = await websocket.receive_text()
                 print("Received data from client")
-                valid_contours = process_frame(data, bg_image_path)
+                valid_contours = process_frame(data, bg_image_path, model)
                 await websocket.send_json(valid_contours)
                 print("Sent contours to client")
             except WebSocketDisconnect:

@@ -65,7 +65,7 @@ export default function CameraViewTest() {
 
   const sendFrameToServer = async () => {
     if (cameraRef.current && wsRef.current) {
-      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.3, exif: false });
+      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.2, exif: false });
       const imageData = photo.base64;
       if (imageData && wsRef.current.readyState === WebSocket.OPEN) {
         console.log('Sending image data to server'); // Debug print
@@ -74,8 +74,6 @@ export default function CameraViewTest() {
     }
   };
 
-  //function to animate bounding boxes 
-  // function to animate bounding boxes 
   // function to animate bounding boxes 
 const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
     // Get the actual size of the camera preview

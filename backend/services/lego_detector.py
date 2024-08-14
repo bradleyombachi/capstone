@@ -9,6 +9,9 @@ import base64
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the path to the uploads directory
+model_dir = os.path.join(script_dir, '..', 'models/Densnet_169_20.keras')
+
+# Construct the path to the uploads directory
 uploads_dir = os.path.join(script_dir, '..', 'uploads')
 
 # construct the path to input dir
@@ -110,7 +113,8 @@ def process_image (image_path, bg_image_path, output_dir):
 
     return bricks_data
 
-def process_frame(image_data, bg_image_path): 
+def process_frame(image_data, bg_image_path, model): 
+    from .lego_guessuer import predictor
     # Decode the base 64 image 
     nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
     image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -151,10 +155,34 @@ def process_frame(image_data, bg_image_path):
             norm_h = h / height
             valid_contours.append([norm_x, norm_y, norm_w, norm_h])
 
-    img_withcontours = image_input.copy()
-    cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
-    contimage_path = os.path.join(output_dir, "contimage.jpg")
-    cv2.imwrite(contimage_path, img_withcontours)
+            # Save the cropped image
+            cropped_image = image_input[y:y + h, x:x + w]
+            avg_color = average_dark_color(cropped_image)
+
+            # pad and equalize all images
+            if w > h:
+                pad = (w - h) // 2
+                cropped_image = cv2.copyMakeBorder(cropped_image, pad, pad, 0, 0, cv2.BORDER_CONSTANT, value=avg_color)
+            else:
+                pad = (h - w) // 2
+                cropped_image = cv2.copyMakeBorder(cropped_image, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=avg_color)
+            cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+            unique_filename = f"cropped_{uuid.uuid4()}.jpg"
+            cropped_image_path = os.path.join(output_dir, unique_filename)
+            
+            # Save the cropped image
+            # cv2.imwrite(cropped_image_path, cropped_image)
+            prediction = predictor(cropped_image, model)
+            print(prediction)
+
+    # Display object detection results
+    object_count = len(valid_contours)
+    print(f"{object_count} object{'s' if object_count != 1 else ''} detected")
+            
+    # img_withcontours = image_input.copy()
+    # cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
+    # contimage_path = os.path.join(output_dir, "contimage.jpg")
+    # cv2.imwrite(contimage_path, img_withcontours)
     
     img_withrectangle = image_input.copy()
     for x, y, w, h in valid_contours:
@@ -163,6 +191,8 @@ def process_frame(image_data, bg_image_path):
         y_scaled = int(y * height)
         w_scaled = int(w * width)
         h_scaled = int(h * height)
+
+        # set the bounding rectangle 
         cv2.rectangle(img_withrectangle, (x_scaled, y_scaled), (x_scaled + w_scaled, y_scaled + h_scaled), (0, 255, 0), 2)
 
     rectimage_path = os.path.join(output_dir, "rectimage.jpg")
