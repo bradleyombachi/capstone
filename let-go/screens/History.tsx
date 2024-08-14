@@ -2,6 +2,8 @@ import React from 'react'
 import { Text, View, StyleSheet, FlatList, Image } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext'
+import { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 
 type ItemData = {
   id: string; 
@@ -57,6 +59,7 @@ const Item = ({brickName, date, brickDescription, isDarkMode}: ItemProps) => (
 
 const History = () => {
   const { isDarkMode } = useTheme();
+ 
   return (
     <View style = {[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
       <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>History</Text>

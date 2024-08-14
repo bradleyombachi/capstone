@@ -1,0 +1,1 @@
+from .lego_detector import process_frame
