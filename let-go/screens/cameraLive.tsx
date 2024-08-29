@@ -1,18 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated } from 'react-native';
-import { Camera, CameraType } from 'expo-camera/legacy';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Camera, CameraType, FlashMode } from 'expo-camera/legacy';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 type BoundingBox = [number, number, number, number];
 
 export default function CameraViewTest() {
   const [type, setType] = useState(CameraType.back);
+  const [torch, setTorch] = useState(FlashMode.off);
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([]);
   const cameraRef = useRef<Camera | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const animatedBoxesRef = useRef<Map<number, any>>(new Map());
   const [yOffsetAdjustment, setYOffsetAdjustment] = useState(-0.055);
+  const frameBuffer = useRef<string[]>([]); // Buffer to store frames
+  const BATCH_SIZE = 5;
+
 
   useEffect(() => {
     const ws = new WebSocket('ws://192.168.254.61:8000/ws');
@@ -58,14 +62,14 @@ export default function CameraViewTest() {
     if (permission?.granted) {
       const interval = setInterval(() => {
         sendFrameToServer();
-      }, 0.1); // Send frame every second
+      }, 1000); // Send frame every second
       return () => clearInterval(interval);
     }
   }, [permission]);
 
   const sendFrameToServer = async () => {
     if (cameraRef.current && wsRef.current) {
-      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.2, exif: false });
+      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.8, exif: false });
       const imageData = photo.base64;
       if (imageData && wsRef.current.readyState === WebSocket.OPEN) {
         console.log('Sending image data to server'); // Debug print
@@ -75,58 +79,41 @@ export default function CameraViewTest() {
   };
 
   // function to animate bounding boxes 
-const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
-    // Get the actual size of the camera preview
-    const { width: previewWidth, height: previewHeight } = Dimensions.get('window'); 
+  const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
+    const { width: previewWidth, height: previewHeight } = Dimensions.get('window');
 
     boxes.forEach((box, index) => {
-        const [normX, normY, normW, normH] = box;
+      const [normX, normY, normW, normH] = box;
 
-        // Scale the normalized coordinates back to screen dimensions
-        const scaledX = normX * previewWidth;
-        const scaledY = normY * previewHeight + (yOffsetAdjustment * previewHeight);
-        const scaledW = normW * previewWidth;
-        const scaledH = normH * previewHeight;
+      const scaledX = normX * previewWidth;
+      const scaledY = normY * previewHeight + (yOffsetAdjustment * previewHeight);
+      const scaledW = normW * previewWidth;
+      const scaledH = normH * previewHeight;
 
-        if (!animatedBoxesRef.current.has(index)) {
-            animatedBoxesRef.current.set(index, {
-                left: new Animated.Value(scaledX),
-                top: new Animated.Value(scaledY),
-                width: new Animated.Value(scaledW),
-                height: new Animated.Value(scaledH),
-            });
-        } else {
-            const animBox = animatedBoxesRef.current.get(index);
-            Animated.timing(animBox.left, {
-                toValue: scaledX,
-                duration: 100,
-                useNativeDriver: false,
-            }).start();
-            Animated.timing(animBox.top, {
-                toValue: scaledY,
-                duration: 100,
-                useNativeDriver: false,
-            }).start();
-            Animated.timing(animBox.width, {
-                toValue: scaledW,
-                duration: 100,
-                useNativeDriver: false,
-            }).start();
-            Animated.timing(animBox.height, {
-                toValue: scaledH,
-                duration: 100,
-                useNativeDriver: false,
-            }).start();
-        }
+      if (!animatedBoxesRef.current.has(index)) {
+        animatedBoxesRef.current.set(index, {
+          left: new Animated.Value(scaledX),
+          top: new Animated.Value(scaledY),
+          width: new Animated.Value(scaledW),
+          height: new Animated.Value(scaledH),
+        });
+      } else {
+        const animBox = animatedBoxesRef.current.get(index);
+        Animated.parallel([
+          Animated.timing(animBox.left, { toValue: scaledX, duration: 100, useNativeDriver: false }),
+          Animated.timing(animBox.top, { toValue: scaledY, duration: 100, useNativeDriver: false }),
+          Animated.timing(animBox.width, { toValue: scaledW, duration: 100, useNativeDriver: false }),
+          Animated.timing(animBox.height, { toValue: scaledH, duration: 100, useNativeDriver: false }),
+        ]).start();
+      }
     });
 
-    // Clean up animatedBoxesRef for boxes that no longer exist
     animatedBoxesRef.current.forEach((_, key) => {
-        if (!boxes[key]) {
-            animatedBoxesRef.current.delete(key);
-        }
+      if (!boxes[key]) {
+        animatedBoxesRef.current.delete(key);
+      }
     });
-};
+  };
 
 
 
@@ -142,6 +129,11 @@ const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
       </View>
     );
   }
+
+  // feature for flash light
+  const toggleTorch = () => {
+    setTorch(prevTorch => prevTorch === FlashMode.off ? FlashMode.torch : FlashMode.off)
+};
 
   const renderAnimatedBoxes = () => {
     return boundingBoxes.map((_, index) => {
@@ -166,12 +158,15 @@ const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
 
   return (
     <View style={styles.container}>
-      <Camera style={styles.camera} type={type} ref={cameraRef}>
+      <Camera style={styles.camera} type={type} flashMode={torch} ref={cameraRef}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
             onPress={() => setType(type === CameraType.back ? CameraType.front : CameraType.back)}>
             <MaterialCommunityIcons name="camera-flip-outline" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={toggleTorch}>
+            <MaterialCommunityIcons name={torch === FlashMode.off ? "flash-off": "flash"} size={30} color="white"/>
           </TouchableOpacity>
         </View>
         {renderAnimatedBoxes()}
@@ -192,6 +187,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
     flexDirection: 'row',
+    justifyContent: 'space-between',
     margin: 20,
   },
   button: {
