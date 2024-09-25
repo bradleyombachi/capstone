@@ -118,6 +118,7 @@ def process_frame(image_data, bg_image_path, model):
     # Decode the base 64 image 
     nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
     image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    #cv2.imwrite(cropped_image_path, image_input)
     
     # Read and resize the background image
     image_bg = cv2.imread(bg_image_path)
@@ -176,6 +177,7 @@ def process_frame(image_data, bg_image_path, model):
             if not(prediction):
                 print("shit")
             print(prediction)
+            
 
     # Display object detection results
     # object_count = len(valid_contours)
@@ -201,8 +203,12 @@ def process_frame(image_data, bg_image_path, model):
     cv2.imwrite(rectimage_path, img_withrectangle)
 
 
-    return valid_contours
+    return valid_contours,prediction
 
+
+
+
+    
 
 
 
