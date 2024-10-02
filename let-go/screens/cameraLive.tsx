@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, TextInput } from 'react-native';
 import { Camera, CameraType } from 'expo-camera/legacy';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -10,12 +10,14 @@ export default function CameraViewTest() {
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([]);
   const cameraRef = useRef<Camera | null>(null);
+  const [guessLabel, setguessLabel] = useState('');
+
   const wsRef = useRef<WebSocket | null>(null);
   const animatedBoxesRef = useRef<Map<number, any>>(new Map());
   const [yOffsetAdjustment, setYOffsetAdjustment] = useState(-0.055);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://192.168.254.40:8000/ws');
+    const ws = new WebSocket('ws://192.168.254.61:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -24,13 +26,14 @@ export default function CameraViewTest() {
 
     ws.onmessage = (e) => {
         const response: any = JSON.parse(e.data);
+        console.log(response);
         const boxes:BoundingBox[] = response["contours"];  // Access contours directly
 
         console.log('Received boxes:', boxes);
         if (Array.isArray(boxes) && boxes.every(box => Array.isArray(box) && box.length === 4 )) {
             updateAnimatedBoxes(boxes);
             setBoundingBoxes(boxes);
-            console.log(response["brickGuess"])
+            setguessLabel(response["brickGuess"])
         }else {
             console.error("Invalid bounding box format received: ", boxes)
         }
@@ -44,7 +47,7 @@ export default function CameraViewTest() {
         console.log(`WebSocket connection closed: ${event.code}`);
         if (event.code !== 1000) { // Reconnect if the close code is not normal
           setTimeout(() => {
-            wsRef.current = new WebSocket('ws://192.168.254.40:8000/ws');
+            wsRef.current = new WebSocket('ws://192.168.254.61:8000/ws');
           }, 0.0000005); // Try to reconnect after 1 second
         }
     };
@@ -169,6 +172,11 @@ const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
 
   return (
     <View style={styles.container}>
+      <TextInput
+        value={guessLabel}
+        editable={false} // Make the textbox non-editable since it's updated by WebSocket
+        placeholder="Waiting for server response..."
+      />
       <Camera style={styles.camera} type={type} ref={cameraRef}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
