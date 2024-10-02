@@ -1,25 +1,35 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import { ScrollView, Text, View, StyleSheet, Switch, TouchableOpacity } from 'react-native'
 import { useTheme } from '../contexts/ThemeContext'
 import { useFontSize } from '../contexts/FontContext';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 // import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Entypo } from '@expo/vector-icons';
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+} from 'react-native-popup-menu';
 
 
 const Settings = () => {
   const { isDarkMode, toggleTheme } = useTheme();
-  const { fontSize, increaseFontSize, decreaseFontSize } = useFontSize();
+  const { customFontSize, setSmall, setMedium, setLarge } = useFontSize();
+  const fontSizeLabel = customFontSize === 12 ? 'Small' : customFontSize === 16 ? 'Medium' : 'Large';
+  useEffect(() => {
+    console.log(`Current font size is: ${customFontSize}`);
+  }, [customFontSize]); // Dependency array includes fontSize
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2'}]}>
       <Text style={[styles.title, {color: isDarkMode ? 'white' : 'black'}]}>Settings</Text>
       
       <ScrollView scrollEnabled={false}>
       <Text style={[styles.visibility, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>VISIBILITY</Text>
       <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
         <View style = {styles.listItem}>
-          <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>High Contrast Mode</Text>
+          <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>High Contrast Mode</Text>
           <View style={styles.highContrast}>
           <Switch
         trackColor={{false: '#767577', true: '#1abc9c'}}
@@ -31,23 +41,54 @@ const Settings = () => {
         </View>
         </View>
         <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
-        <TouchableOpacity style={styles.listItem}>
-          <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Font Size </Text>
-          <View style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end'}}>
+        <View style={styles.listItem}>
+          <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}> Font Size </Text>
+          <Menu style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end', borderRadius: 50}}>
+            <MenuTrigger 
+            children={
+              <Text style={{color: '#787878', fontSize: customFontSize}}>
+              {fontSizeLabel}
+            </Text>
+          }
+            />
+            <View style={{justifyContent: 'center'}}>
+            <Entypo name="select-arrows" size={16} color="#787878" />
+            </View>
+            <MenuOptions   customStyles={{
+                  optionWrapper: {
+                    backgroundColor: isDarkMode ? 'black' : 'white',
+                  },
+                  optionText: {
+                    color: '#787878',
+                    fontSize: customFontSize
+                  },
+                }}>
+              <MenuOption onSelect={setSmall} >
+                <Text style={{color: '#787878', fontSize: customFontSize}}>Small</Text>
+              </MenuOption>
+              <MenuOption onSelect={setMedium} >
+                <Text style={{color: '#787878', fontSize: customFontSize}}>Medium</Text>
+              </MenuOption>
+              <MenuOption onSelect={setLarge} >
+                <Text style={{color: '#787878', fontSize: customFontSize}}>Large</Text>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+          {/* <View style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end'}}>
             <Text style={{color: '#787878', fontSize: 16}}>
               Medium
             </Text>
             <View style={{justifyContent: 'center'}}>
           <Entypo name="select-arrows" size={16} color="#787878" />
           </View>
-          </View>
-        </TouchableOpacity>
+          </View> */}
+        </View>
 
         <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
 
         <View style={styles.listItem}>
-        <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Color Theme </Text>
-        <View style={{flex: 1, alignItems: 'flex-end', backgroundColor: "#1abc9c", marginLeft: 160, borderRadius: 10}}>
+        <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}> Color Theme </Text>
+        <View style={{flex: 1, alignItems: 'flex-end', backgroundColor: "#1abc9c", marginLeft: 130, borderRadius: 10}}>
           <Text>   </Text>
           </View>
         </View>
@@ -56,7 +97,7 @@ const Settings = () => {
       <Text style={[styles.audio, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>AUDIO</Text>
       <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
           <View style={styles.volumeText}>
-            <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>
+            <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>
               Volume
             </Text>
           </View>
@@ -67,7 +108,7 @@ const Settings = () => {
             </View>
     <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
             <View style={styles.listItem}>
-              <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>
+              <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>
                 Voice Language
               </Text>
               <View style={{flex: 1, alignItems: 'flex-end'}}>
@@ -159,6 +200,10 @@ const styles = StyleSheet.create({
   languageText: {
     color: "#787878",
     fontSize: 16,
+  },
+  menuBox: 
+  {
+    backgroundColor: 'blue'
   }
 
 
