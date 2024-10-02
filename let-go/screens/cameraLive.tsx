@@ -15,7 +15,7 @@ export default function CameraViewTest() {
   const [yOffsetAdjustment, setYOffsetAdjustment] = useState(-0.055);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://192.168.254.40:8000/ws');
+    const ws = new WebSocket('ws://10.16.69.152:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {

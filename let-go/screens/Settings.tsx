@@ -1,6 +1,7 @@
 import React, {useState} from 'react'
 import { ScrollView, Text, View, StyleSheet, Switch, TouchableOpacity } from 'react-native'
 import { useTheme } from '../contexts/ThemeContext'
+import { useFontSize } from '../contexts/FontContext';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 // import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Entypo } from '@expo/vector-icons';
@@ -8,6 +9,7 @@ import { Entypo } from '@expo/vector-icons';
 
 const Settings = () => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const { fontSize, increaseFontSize, decreaseFontSize } = useFontSize();
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
@@ -33,7 +35,7 @@ const Settings = () => {
           <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Font Size </Text>
           <View style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end'}}>
             <Text style={{color: '#787878', fontSize: 16}}>
-              16
+              Medium
             </Text>
             <View style={{justifyContent: 'center'}}>
           <Entypo name="select-arrows" size={16} color="#787878" />
