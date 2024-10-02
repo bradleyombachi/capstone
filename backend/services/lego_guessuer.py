@@ -14,7 +14,7 @@ import cv2
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the path to the uploads directory
-model_dir = os.path.join(script_dir, '..', 'models/predictLego-2024.keras')
+model_dir = os.path.join(script_dir, '..', 'models/predictLego_2024_sep.keras')
 
 def predictor(image_data, model): 
     # array of labels 

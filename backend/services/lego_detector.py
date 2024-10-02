@@ -168,18 +168,20 @@ def process_frame(image_data, bg_image_path, model):
                 pad = (h - w) // 2
                 cropped_image = cv2.copyMakeBorder(cropped_image, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=avg_color)
             cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
-            unique_filename = f"cropped_{uuid.uuid4()}.jpg"
+            unique_filename = f"cropped.jpg"
             cropped_image_path = os.path.join(output_dir, unique_filename)
             
             # Save the cropped image
-            #cv2.imwrite(cropped_image_path, cropped_image)
+            cv2.imwrite(cropped_image_path, cropped_image)
             prediction = predictor(cropped_image, model)
+            if not(prediction):
+                print("shit")
             print(prediction)
             
 
     # Display object detection results
-    object_count = len(valid_contours)
-    print(f"{object_count} object{'s' if object_count != 1 else ''} detected")
+    # object_count = len(valid_contours)
+    # print(f"{object_count} object{'s' if object_count != 1 else ''} detected")
             
     # img_withcontours = image_input.copy()
     # cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
