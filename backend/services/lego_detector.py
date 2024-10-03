@@ -4,6 +4,8 @@ import uuid
 import numpy as np 
 import base64
 from datetime import datetime
+import requests
+
 
 # Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -29,23 +31,50 @@ def average_dark_color (image):
         return [25, 25, 25]
     return np.mean(dark_pixels, axis=0)
 
-# pre process the image 
-def process_image (image_path, bg_image_path, output_dir): 
-    import requests
-    path = './output/'+datetime.now()+'nobg.jpg'
-    response = requests.post(
-        'https://api.remove.bg/v1.0/removebg',
-        files={'image_file': open(image_path, 'rb')},
-        data={'size': 'auto'},
-        headers={'X-Api-Key': 'ZUho38RByEv2TDmXciiqAqW9'},
-    )
-    if response.status_code == requests.codes.ok:
-        with open('no-bg.png', 'wb') as out:
-            out.write(path)
-    else:
-        print("Error:", response.status_code, response.text)
+# remove the background function 
+def remove_background(inputPath,output_path):  
+    input_path = inputPath
+    filename_without_extension = os.path.splitext(os.path.basename(input_path))[0]
 
-    
+
+    # Path for the greyscale image, with "greyscale" in its filename
+    grey_scale_filename = f"{filename_without_extension}_greyscale.png"
+    grey_scale_output_path = os.path.join("greyscale", grey_scale_filename)
+
+    try:
+        # Prepare the form data for the request
+        with open(input_path, 'rb') as file:
+            files = {
+                'image_file': (input_path, file),
+                'size': (None, 'auto')
+            }
+            headers = {
+                'X-Api-Key': 'ZUho38RByEv2TDmXciiqAqW9'
+            }
+
+            # Make the request to remove.bg API
+            response = requests.post('https://api.remove.bg/v1.0/removebg', files=files, headers=headers, stream=True)
+
+            # Check the response status
+            if response.status_code != 200:
+                print('Error:', response.status_code, response.text)
+                return
+
+            # Write the image with the background removed
+            with open(output_path, 'wb') as out_file:
+                out_file.write(response.content)
+
+            
+            return(output_path)
+    except Exception as error:
+        print('Failed to process image:', error)
+
+# pre process the image 
+def process_image (image_path, bg_image_path, output_dir):   
+    outputpath = os.path.join(output_dir, "nbg.jpg")  
+    path = remove_background(image_path, outputpath)
+
+
     image_input = cv2.imread(path)
     image_bg = cv2.imread(bg_image_path)
 
