@@ -22,7 +22,6 @@ export default function CameraViewTest() {
 
   useEffect(() => {
     const ws = new WebSocket('ws://192.168.254.61:8000/ws');
-    const ws = new WebSocket('ws://192.168.254.61:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
