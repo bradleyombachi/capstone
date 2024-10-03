@@ -3,7 +3,7 @@ import os
 import uuid 
 import numpy as np 
 import base64
-
+from datetime import datetime
 
 # Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +31,21 @@ def average_dark_color (image):
 
 # pre process the image 
 def process_image (image_path, bg_image_path, output_dir): 
+    import requests
+
+    response = requests.post(
+        'https://api.remove.bg/v1.0/removebg',
+        files={'image_file': open(image_path, 'rb')},
+        data={'size': 'auto'},
+        headers={'X-Api-Key': 'ZUho38RByEv2TDmXciiqAqW9'},
+    )
+    if response.status_code == requests.codes.ok:
+        with open('no-bg.png', 'wb') as out:
+            out.write('./output/'+datetime.now()+'nobg.jpg')
+    else:
+        print("Error:", response.status_code, response.text)
+
+    
     image_input = cv2.imread(image_path)
     image_bg = cv2.imread(bg_image_path)
 
