@@ -32,7 +32,7 @@ def average_dark_color (image):
 # pre process the image 
 def process_image (image_path, bg_image_path, output_dir): 
     import requests
-
+    path = './output/'+datetime.now()+'nobg.jpg'
     response = requests.post(
         'https://api.remove.bg/v1.0/removebg',
         files={'image_file': open(image_path, 'rb')},
@@ -41,12 +41,12 @@ def process_image (image_path, bg_image_path, output_dir):
     )
     if response.status_code == requests.codes.ok:
         with open('no-bg.png', 'wb') as out:
-            out.write('./output/'+datetime.now()+'nobg.jpg')
+            out.write(path)
     else:
         print("Error:", response.status_code, response.text)
 
     
-    image_input = cv2.imread(image_path)
+    image_input = cv2.imread(path)
     image_bg = cv2.imread(bg_image_path)
 
     # adjust the background to the same sixe as the input image 
