@@ -79,7 +79,7 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 data = await websocket.receive_text()
                 print("Received data from client")
-                valid_contours,brick = process_frame(data, bg_image_path, model)
+                valid_contours,brick = process_frame(data, model)
                 response = {
                     "contours": valid_contours,
                     "brickGuess" : brick

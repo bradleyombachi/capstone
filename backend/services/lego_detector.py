@@ -1,186 +1,94 @@
 import cv2
-import os 
-import uuid 
-import numpy as np 
+import os
+import numpy as np
 import base64
-from datetime import datetime
-import requests
 from rembg import remove
-
 
 # Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Construct the path to the uploads directory
+# Construct the path to necessary directories
 model_dir = os.path.join(script_dir, '..', 'models/Densnet_169_20.keras')
-
-# Construct the path to the uploads directory
 uploads_dir = os.path.join(script_dir, '..', 'uploads')
-
-# construct the path to input dir
 input_dir = os.path.join(script_dir, '..', 'input')
-
-# construct the path to input dir
 output_dir = os.path.join(script_dir, '..', 'output')
 
-
-# function to calculate the average of pixels darker than 50
-def average_dark_color (image): 
-    dark_pixels = image[np.all(image < [50, 50, 50], axis =- 1)]
-    # fallback if there are no pixels found
+# Function to calculate the average of pixels darker than 50
+def average_dark_color(image):
+    dark_pixels = image[np.all(image < [50, 50, 50], axis=-1)]
     if dark_pixels.size == 0:
         return [25, 25, 25]
     return np.mean(dark_pixels, axis=0)
 
-# remove the background function 
-def remove_background(inputPath,output_path):  
-    with open(inputPath, "rb") as input_file:
-        input_data = input_file.read()
+# Remove the background and return the image in OpenCV format
+def remove_background(input_data):
+    output_path = os.path.join(output_dir,'output.jpg')
+    # Ensure input_data is bytes
+    if isinstance(input_data, str):
+        input_data = base64.b64decode(input_data)
+    
+    result = remove(input_data, force_return_bytes=True)  # Force return bytes
 
-    # Remove background
-    result = remove(input_data)
-
-    # Save the output image
-    with open(output_path, "wb") as output_file:
-        output_file.write(result)
-
-# pre process the image 
-def process_image (image_path, bg_image_path, output_dir):   
-    outputpath = os.path.join(output_dir, "nbg.jpg")  
-    path = remove_background(image_path, outputpath)
+    # Convert byte string to a NumPy array and decode as an image
+    nparr = np.frombuffer(result, np.uint8)
+    image_no_bg = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)  # Supports transparency if PNG
+    
+    cv2.imwrite(output_path, image_no_bg)
 
 
-    image_input = cv2.imread(path)
-    image_bg = cv2.imread(bg_image_path)
+    return image_no_bg
 
-    # adjust the background to the same sixe as the input image 
-    image_bg = cv2.resize(image_bg, (image_input.shape[1], image_input.shape[0]), interpolation=cv2.INTER_AREA)
+# Process the image and get contours and predictions
+def process_frame(image_data, model):
+    from .lego_guessuer import predictor
 
-    # convert images into grayscale 
-    image_bg_gray = cv2.cvtColor(image_bg, cv2.COLOR_BGR2GRAY)
-    image_input_gray = cv2.cvtColor(image_input, cv2.COLOR_BGR2GRAY)
-
-    # calculate the difference between the background and the input image
-    diff_gray = cv2.absdiff(image_bg_gray, image_input_gray)
-
-    # gaussian blur to smooth the pixels
-    diff_gray_blur = cv2.GaussianBlur(diff_gray, (5, 5), 0)
-
-    # find threshold to convert to binary image using Otsu's method
-    ret, image_treshold = cv2.threshold(diff_gray_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    # find contours
-    arr_cnt, _ = cv2.findContours(image_treshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # filter the valid contours
-    # - eliminate pixel groups of area below minmum of 1x1 brick
-    # - eliminate pixels found within the lego edges 
-    # - eliminate the pixel groups that dimension ratio exceeeds 1x6 brick 
-
-    # filter valid contours 
-    height, width, _ = image_input.shape
+    prediction_label = None
     valid_contours = []
 
-    for i, contour in enumerate(arr_cnt):
-        ca = cv2.contourArea(contour)
-        x, y, w, h = cv2.boundingRect(contour)
-
-        # aspect ration for the enlongated pixel area (morethan the longest brick 1x6)
-        aspect_ratio = float(w)/ h
-
-        # eliminated noise pixels 
-        edge_noise = x == 0 or y == 0 or (x+w) == width or (y+h) == height
-
-        if ca > 13000 and aspect_ratio <= 6 and not edge_noise: 
-            valid_contours.append(i)
-
-    # Output results
-    img_withcontours = image_input.copy()
-    cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
-
-    # Display object detection results
-    object_count = len(valid_contours)
-    print(f"{object_count} object{'s' if object_count != 1 else ''} detected")
-
-    img_withrectangle = image_input.copy()
-
-    bricks_data = []
-    for i in valid_contours:
-        x, y, w, h = cv2.boundingRect(arr_cnt[i])
-        unique_filename = f"brick_{i}_{uuid.uuid4()}.jpg"
-        brick_info = {
-            "id": i,
-            "position": {"x": x, "y": y},
-            "size": {"width": w, "height": h},
-        }
-        bricks_data.append(brick_info)
-
-        crop_img = image_input[y:y + h, x:x + w]
-        avg_color = average_dark_color(crop_img)
-
-        if w > h:
-            pad = (w - h) // 2
-            crop_img = cv2.copyMakeBorder(crop_img, pad, pad, 0, 0, cv2.BORDER_CONSTANT, value=avg_color)
-        else:
-            pad = (h - w) // 2
-            crop_img = cv2.copyMakeBorder(crop_img, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=avg_color)
-
-        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite(f"{output_dir}/{unique_filename}", crop_img)
-        cv2.rectangle(img_withrectangle, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-
-    return bricks_data
-
-def process_frame(image_data, bg_image_path, model): 
-    from .lego_guessuer import predictor
-    # Decode the base 64 image 
+    # Decode the base64 image data
     nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
     image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    #cv2.imwrite(cropped_image_path, image_input)
-    image_input = remove_background(image_data)
-    
-    # Read and resize the background image
-    image_bg = cv2.imread(bg_image_path)
-    if image_bg is None:
-        raise ValueError(f"Background image not found at path: {bg_image_path}")
 
-    image_bg = cv2.resize(image_bg, (image_input.shape[1], image_input.shape[0]), interpolation=cv2.INTER_AREA)
+    # Remove the background from the image
+    image_no_bg = remove_background(image_data)
 
-    # Convert images to grayscale 
-    image_bg_gray = cv2.cvtColor(image_bg, cv2.COLOR_BGR2GRAY)
-    image_input_gray = cv2.cvtColor(image_input, cv2.COLOR_BGR2GRAY)
+    # Ensure the background-removed image is valid
+    if image_no_bg is None:
+        raise ValueError("Background removal failed. Check the image data.")
 
-    # Calculate the difference between the background and the input image
-    diff_gray = cv2.absdiff(image_bg_gray, image_input_gray)
-    diff_gray_blur = cv2.GaussianBlur(diff_gray, (5, 5), 0)
-    ret, image_threshold = cv2.threshold(diff_gray_blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Convert the background-removed image to grayscale for contour detection
+    image_gray = cv2.cvtColor(image_no_bg, cv2.COLOR_BGR2GRAY)
 
-    # Find contours
-    arr_cnt, _ = cv2.findContours(image_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Apply Gaussian blur and thresholding to detect contours
+    blurred_gray = cv2.GaussianBlur(image_gray, (5, 5), 0)
+    _, image_threshold = cv2.threshold(blurred_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Find contours in the thresholded image
+    contours, _ = cv2.findContours(image_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     height, width, _ = image_input.shape
     valid_contours = []
+    prediction_label = None
 
-    for contour in arr_cnt:
-        ca = cv2.contourArea(contour)
+    for contour in contours:
+        contour_area = cv2.contourArea(contour)
         x, y, w, h = cv2.boundingRect(contour)
         aspect_ratio = float(w) / h
         edge_noise = x == 0 or y == 0 or (x + w) == width or (y + h) == height
 
-        if ca > 1300 and aspect_ratio <= 6 and not edge_noise:
-            # Normalize coordinates by the width and height of the image
+        # Filter valid contours by size, aspect ratio, and avoid edge noise
+        if contour_area > 1300 and aspect_ratio <= 6 and not edge_noise:
             norm_x = x / width
             norm_y = y / height
             norm_w = w / width
             norm_h = h / height
             valid_contours.append([norm_x, norm_y, norm_w, norm_h])
 
-            # Save the cropped image
+            # Crop the valid region from the image
             cropped_image = image_input[y:y + h, x:x + w]
             avg_color = average_dark_color(cropped_image)
 
-            # pad and equalize all images
+            # Pad and equalize the cropped image for model prediction
             if w > h:
                 pad = (w - h) // 2
                 cropped_image = cv2.copyMakeBorder(cropped_image, pad, pad, 0, 0, cv2.BORDER_CONSTANT, value=avg_color)
@@ -188,60 +96,42 @@ def process_frame(image_data, bg_image_path, model):
                 pad = (h - w) // 2
                 cropped_image = cv2.copyMakeBorder(cropped_image, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=avg_color)
             cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
-            unique_filename = f"cropped.jpg"
-            cropped_image_path = os.path.join(output_dir, unique_filename)
-            
-            # Save the cropped image
-            cv2.imwrite(cropped_image_path, cropped_image)
-            prediction = predictor(cropped_image, model)
-            if not(prediction):
-                print("shit")
-            print(prediction)
+            cv2.imwrite(os.path.join(output_dir,'cropped.jpg'), cropped_image)
+
+            cropped_raw = remove_background(os.path.join(output_dir,'cropped.jpg'))
             
 
-    # Display object detection results
-    # object_count = len(valid_contours)
-    # print(f"{object_count} object{'s' if object_count != 1 else ''} detected")
-            
-    # img_withcontours = image_input.copy()
-    # cv2.drawContours(img_withcontours, arr_cnt, -1, (0, 255, 0), 3)
-    # contimage_path = os.path.join(output_dir, "contimage.jpg")
-    # cv2.imwrite(contimage_path, img_withcontours)
-    
-    img_withrectangle = image_input.copy()
-    for x, y, w, h in valid_contours:
-        # Scale back to original dimensions for drawing
-        x_scaled = int(x * width)
-        y_scaled = int(y * height)
-        w_scaled = int(w * width)
-        h_scaled = int(h * height)
+            # Predict the label for the cropped image
+            try:
+                prediction_label = predictor(cropped_raw, model)
+            except Exception as e:
+                print(f"Error during prediction: {e}")
+            print("Prediction:", prediction_label)
 
-        # set the bounding rectangle 
-        cv2.rectangle(img_withrectangle, (x_scaled, y_scaled), (x_scaled + w_scaled, y_scaled + h_scaled), (0, 255, 0), 2)
+    # Draw bounding boxes around the detected contours
+    image_with_boxes = image_input.copy()
+    for contour in valid_contours:
+        norm_x, norm_y, norm_w, norm_h = contour
+        x_scaled = int(norm_x * width)
+        y_scaled = int(norm_y * height)
+        w_scaled = int(norm_w * width)
+        h_scaled = int(norm_h * height)
+        cv2.rectangle(image_with_boxes, (x_scaled, y_scaled), (x_scaled + w_scaled, y_scaled + h_scaled), (0, 255, 0), 2)
 
-    rectimage_path = os.path.join(output_dir, "rectimage.jpg")
-    cv2.imwrite(rectimage_path, img_withrectangle)
+    # Save the output image with bounding boxes
+    output_image_path = os.path.join(output_dir, "output_with_boxes.jpg")
+    cv2.imwrite(output_image_path, image_with_boxes)
 
-
-    return valid_contours,prediction
-
-
-
+    # Cleanup and release memory
+    image_input = None
+    image_no_bg = None
+    image_with_boxes = None
+    cv2.destroyAllWindows()
 
     
+    return valid_contours, prediction_label
 
-
-
-# Construct the full path to the user image
-user_image_name = "318B2DF1-B57C-4033-9547-FBDFF6F2FA9C.jpg"
-user_image_path = os.path.join(uploads_dir, user_image_name)
-
-# construct the full path to the bg image 
-bg_image_name = "background_backlit_B.jpg"
-bg_image_path = os.path.join(input_dir, bg_image_name)
-
-# Now call the process_image function with the full path
-#bricks = process_image(user_image_path, bg_image_path, output_dir)
-
-# Example usage
-#print(bricks)
+# Example usage:
+# user_image_name = "318B2DF1-B57C-4033-9547-FBDFF6F2FA9C.jpg"
+# user_image_path = os.path.join(uploads_dir, user_image_name)
+# valid_contours, prediction = process_frame(user_image_path, model)
