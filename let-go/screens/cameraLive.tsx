@@ -57,7 +57,7 @@ export default function CameraViewTest() {
         console.log(`WebSocket connection closed: ${event.code}`);
         if (event.code !== 1000) { // Reconnect if the close code is not normal
           setTimeout(() => {
-            wsRef.current = new WebSocket('ws://10.125.153.65:8000/ws');
+            wsRef.current = new WebSocket('ws://10.125.155.38:8000/ws');
           }, 0.05); // Try to reconnect after 1 second
         }
     };

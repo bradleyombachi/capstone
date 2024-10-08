@@ -35,8 +35,12 @@ def remove_background(input_data):
     
     cv2.imwrite(output_path, image_no_bg)
 
+    image_no_bg_bgr = cv2.cvtColor(image_no_bg, cv2.COLOR_BGRA2BGR)
 
-    return image_no_bg
+    # Save the output image
+    cv2.imwrite(output_path, image_no_bg_bgr)
+
+    return image_no_bg_bgr
 
 # Process the image and get contours and predictions
 def process_frame(image_data, model):
@@ -48,7 +52,7 @@ def process_frame(image_data, model):
     # Decode the base64 image data
     nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
     image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
+    
     # Remove the background from the image
     image_no_bg = remove_background(image_data)
 
@@ -66,7 +70,7 @@ def process_frame(image_data, model):
     # Find contours in the thresholded image
     contours, _ = cv2.findContours(image_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    height, width, _ = image_input.shape
+    height, width, _ = image_no_bg.shape
     valid_contours = []
     prediction_label = None
 
@@ -85,7 +89,7 @@ def process_frame(image_data, model):
             valid_contours.append([norm_x, norm_y, norm_w, norm_h])
 
             # Crop the valid region from the image
-            cropped_image = image_input[y:y + h, x:x + w]
+            cropped_image = image_no_bg[y:y + h, x:x + w]
             avg_color = average_dark_color(cropped_image)
 
             # Pad and equalize the cropped image for model prediction
@@ -98,12 +102,9 @@ def process_frame(image_data, model):
             cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
             cv2.imwrite(os.path.join(output_dir,'cropped.jpg'), cropped_image)
 
-            cropped_raw = remove_background(os.path.join(output_dir,'cropped.jpg'))
-            
-
             # Predict the label for the cropped image
             try:
-                prediction_label = predictor(cropped_raw, model)
+                prediction_label = predictor(cropped_image, model)
             except Exception as e:
                 print(f"Error during prediction: {e}")
             print("Prediction:", prediction_label)
@@ -128,8 +129,8 @@ def process_frame(image_data, model):
     image_with_boxes = None
     cv2.destroyAllWindows()
 
-    
     return valid_contours, prediction_label
+
 
 # Example usage:
 # user_image_name = "318B2DF1-B57C-4033-9547-FBDFF6F2FA9C.jpg"
