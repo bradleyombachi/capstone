@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import { ScrollView, Text, View, StyleSheet, Switch, TouchableOpacity } from 'react-native'
+import { ScrollView, Text, View, StyleSheet, Switch, TouchableOpacity, Modal, Button } from 'react-native'
 import { useTheme } from '../contexts/ThemeContext'
 import { useFontSize } from '../contexts/FontContext';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
@@ -11,6 +11,8 @@ import {
   MenuOption,
   MenuTrigger,
 } from 'react-native-popup-menu';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import ColorPicker, { Panel3, Swatches, Preview, OpacitySlider, HueSlider } from 'reanimated-color-picker';
 
 
 const Settings = () => {
@@ -20,6 +22,12 @@ const Settings = () => {
   useEffect(() => {
     console.log(`Current font size is: ${customFontSize}`);
   }, [customFontSize]); // Dependency array includes fontSize
+  const [showModal, setShowModal] = useState(false);
+
+  const onSelectColor = ({ hex }: { hex: string }) => {
+    // do something with the selected color.
+    console.log(hex);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2'}]}>
@@ -88,10 +96,31 @@ const Settings = () => {
 
         <View style={styles.listItem}>
         <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}> Color Theme </Text>
-        <View style={{flex: 1, alignItems: 'flex-end', backgroundColor: "#1abc9c", marginLeft: 130, borderRadius: 10}}>
-          <Text>   </Text>
+        <View style={{flex: 1, alignItems: 'flex-end', marginLeft: 130, borderRadius: 10}}>
+            <View style={styles.colorPicker}>
+            <Modal 
+              visible={showModal} 
+              animationType='slide'
+              transparent={true} // Make the background semi-transparent for better visibility
+              onRequestClose={() => setShowModal(false)} 
+              >
+               <View style={styles.modalContainer}>
+                  <ColorPicker style={{ width: '70%' }} value="red" onComplete={onSelectColor}>
+                    <Preview style={{marginBottom: 20}}/>
+                    <Panel3 style={{marginBottom: 20}}/>
+                  </ColorPicker>
+
+                  <Button title="Close" onPress={() => setShowModal(false)} />
+              </View>
+
+              <Button title='Ok' onPress={() => setShowModal(false)} />
+            </Modal>
           </View>
+          <TouchableOpacity onPress={() => setShowModal(true)}>         
+            <FontAwesome name="circle" size={30} color="#1abc9c" />
+          </TouchableOpacity>
         </View>
+      </View>
       </View>
 
       <Text style={[styles.audio, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>AUDIO</Text>
@@ -177,7 +206,7 @@ const styles = StyleSheet.create({
     
   },
   volumeText: {
-        //flex: 1,
+    //flex: 1,
     //backgroundColor: 'red',
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -204,7 +233,16 @@ const styles = StyleSheet.create({
   menuBox: 
   {
     backgroundColor: 'blue'
-  }
-
+  },
+  colorPicker: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
 });
