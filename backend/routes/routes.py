@@ -8,6 +8,7 @@ import tensorflow as tf
 
 router = APIRouter()
 
+
 @router.get("/")
 async def test():
     return {"brickName": "Damn"}

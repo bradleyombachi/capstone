@@ -33,18 +33,25 @@ def remove_background(input_data):
     nparr = np.frombuffer(result, np.uint8)
     image_no_bg = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)  # Supports transparency if PNG
     
-    cv2.imwrite(output_path, image_no_bg)
+    # Check if the image was properly decoded
+    if image_no_bg is None:
+        raise ValueError("Failed to decode the image after background removal.")
+    
+    #cv2.imwrite(output_path, image_no_bg)
 
+    
     image_no_bg_bgr = cv2.cvtColor(image_no_bg, cv2.COLOR_BGRA2BGR)
 
     # Save the output image
-    cv2.imwrite(output_path, image_no_bg_bgr)
+    #cv2.imwrite(output_path, image_no_bg_bgr)
 
     return image_no_bg_bgr
 
 # Process the image and get contours and predictions
 def process_frame(image_data, model):
     from .lego_guessuer import predictor
+
+    print("Processing new frame...")
 
     prediction_label = None
     valid_contours = []
@@ -100,7 +107,7 @@ def process_frame(image_data, model):
                 pad = (h - w) // 2
                 cropped_image = cv2.copyMakeBorder(cropped_image, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=avg_color)
             cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
-            cv2.imwrite(os.path.join(output_dir,'cropped.jpg'), cropped_image)
+            #cv2.imwrite(os.path.join(output_dir,'cropped.jpg'), cropped_image)
 
             # Predict the label for the cropped image
             try:
@@ -121,13 +128,7 @@ def process_frame(image_data, model):
 
     # Save the output image with bounding boxes
     output_image_path = os.path.join(output_dir, "output_with_boxes.jpg")
-    cv2.imwrite(output_image_path, image_with_boxes)
-
-    # Cleanup and release memory
-    image_input = None
-    image_no_bg = None
-    image_with_boxes = None
-    cv2.destroyAllWindows()
+    #cv2.imwrite(output_image_path, image_with_boxes)
 
     return valid_contours, prediction_label
 
