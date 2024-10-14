@@ -68,6 +68,10 @@ bg_image_path = os.path.join(input_dir, bg_image_name)
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
+    # Log whether the connection is using wss or ws
+    protocol = 'wss' if websocket.url.scheme == 'wss' else 'ws'
+    print(f"WebSocket connection established using {protocol}://")
+
     # load the model on booting 
     try: 
         model = tf.keras.models.load_model(model_dir)
