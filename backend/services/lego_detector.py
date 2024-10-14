@@ -107,7 +107,7 @@ def process_frame(image_data, model):
                 pad = (h - w) // 2
                 cropped_image = cv2.copyMakeBorder(cropped_image, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=avg_color)
             cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
-            #cv2.imwrite(os.path.join(output_dir,'cropped.jpg'), cropped_image)
+            cv2.imwrite(os.path.join(output_dir,'cropped.jpg'), cropped_image)
 
             # Predict the label for the cropped image
             try:
