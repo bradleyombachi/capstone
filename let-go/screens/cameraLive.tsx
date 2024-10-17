@@ -35,12 +35,13 @@ export default function CameraViewTest() {
         const response: any = JSON.parse(e.data);
         console.log(response);
         const boxes:BoundingBox[] = response["contours"];  // Access contours directly
+        const color = response["color"]
 
         console.log('Received boxes:', boxes);
         if (Array.isArray(boxes) && boxes.every(box => Array.isArray(box) && box.length === 4 )) {
             updateAnimatedBoxes(boxes);
             setBoundingBoxes(boxes);
-            setguessLabel(response["brickGuess"]);
+            setguessLabel(response["brickGuess"]+response["color"]);
             if (response["brickGuess"]) {
               Speech.speak(response["brickGuess"]);
           }
