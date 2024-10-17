@@ -44,7 +44,7 @@ def remove_background(input_data):
 
 # Process the image and get contours and predictions
 def process_frame(image_data, model):
-    from .lego_guessuer import predictor
+    from .lego_guesser import predictor
 
     prediction_label = None
     valid_contours = []
@@ -55,6 +55,13 @@ def process_frame(image_data, model):
     
     # Remove the background from the image
     image_no_bg = remove_background(image_data)
+
+    image_rgb = cv2.cvtColor(image_no_bg, cv2.COLOR_BGR2RGB)
+
+    mask = cv2.inRange(image_no_bg, np.array([1, 1, 1]), np.array([255, 255, 255]))
+
+    average_color = cv2.mean(image_rgb, mask=mask)[:3]  # [:3] ignores the alpha channel if present
+
 
     # Ensure the background-removed image is valid
     if image_no_bg is None:
@@ -129,7 +136,7 @@ def process_frame(image_data, model):
     image_with_boxes = None
     cv2.destroyAllWindows()
 
-    return valid_contours, prediction_label
+    return valid_contours, prediction_label, average_color
 
 
 # Example usage:
