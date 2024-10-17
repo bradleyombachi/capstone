@@ -79,10 +79,11 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 data = await websocket.receive_text()
                 print("Received data from client")
-                valid_contours,brick = process_frame(data, model)
+                valid_contours,brick,average_color = process_frame(data, model)
                 response = {
                     "contours": valid_contours,
-                    "brickGuess" : brick
+                    "brickGuess" : brick,
+                    "color" : average_color
                 }
                 await websocket.send_json(response)
                 print("Sent contours to client")
