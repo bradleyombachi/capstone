@@ -4,9 +4,31 @@ from services import process_frame
 import os
 import base64
 import tensorflow as tf
+import webcolors
 
 
 router = APIRouter()
+
+def get_color_name(rgb_tuple):
+    try:
+        # Try to get the exact color name
+        color_name = webcolors.rgb_to_name(rgb_tuple)
+    except ValueError:
+        # If there's no exact color, get the closest one
+        closest_name = get_closest_color_name(rgb_tuple)
+        return closest_name
+    return color_name
+
+def get_closest_color_name(rgb_tuple):
+    min_distance = float('inf')
+    closest_name = None
+    for hex_value, color_name in webcolors.CSS3_HEX_TO_NAMES.items():
+        r_c, g_c, b_c = webcolors.hex_to_rgb(hex_value)
+        distance = (r_c - rgb_tuple[0])**2 + (g_c - rgb_tuple[1])**2 + (b_c - rgb_tuple[2])**2
+        if distance < min_distance:
+            min_distance = distance
+            closest_name = color_name
+    return closest_name
 
 
 @router.get("/")
@@ -85,6 +107,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 data = await websocket.receive_text()
                 print("Received data from client")
                 valid_contours,brick,average_color = process_frame(data, model)
+                
+                average_color = get_color_name(average_color)
+
                 response = {
                     "contours": valid_contours,
                     "brickGuess" : brick,
