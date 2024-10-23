@@ -21,10 +21,9 @@ export default function CameraViewTest() {
   const [yOffsetAdjustment, setYOffsetAdjustment] = useState(-0.055);
   const frameBuffer = useRef<string[]>([]); // Buffer to store frames
   const BATCH_SIZE = 5;
-
-
+  
   useEffect(() => {
-    const ws = new WebSocket('ws://192.168.254.61:8000/ws');
+    const ws = new WebSocket('ws://10.125.191.3:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -58,7 +57,7 @@ export default function CameraViewTest() {
         console.log(`WebSocket connection closed: ${event.code}`);
         if (event.code !== 1000) { // Reconnect if the close code is not normal
           setTimeout(() => {
-            wsRef.current = new WebSocket('ws://192.168.254.61:8000/ws');
+            wsRef.current = new WebSocket('ws://10.125.191.3:8000/ws');
           }, 100); // Try to reconnect after 1 second
         }
     };
@@ -75,7 +74,7 @@ export default function CameraViewTest() {
     if (permission?.granted) {
       const interval = setInterval(() => {
         sendFrameToServer();
-      }, 10); // Send frame every second
+      }, 5000); // Send frame every second
       return () => clearInterval(interval);
     }
   }, [permission]);
@@ -85,6 +84,7 @@ export default function CameraViewTest() {
       const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 1.0, exif: false });
       const imageData = photo.base64;
       if (imageData && wsRef.current.readyState === WebSocket.OPEN) {
+        
         console.log('Sending image data to server'); // Debug print
         wsRef.current.send(imageData);
       }
