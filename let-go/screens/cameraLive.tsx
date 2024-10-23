@@ -24,7 +24,7 @@ export default function CameraViewTest() {
 
 
   useEffect(() => {
-    const ws = new WebSocket('ws://192.168.254.61:8000/ws');
+    const ws = new WebSocket('ws://10.125.163.1:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -58,7 +58,7 @@ export default function CameraViewTest() {
         console.log(`WebSocket connection closed: ${event.code}`);
         if (event.code !== 1000) { // Reconnect if the close code is not normal
           setTimeout(() => {
-            wsRef.current = new WebSocket('ws://192.168.254.61:8000/ws');
+            wsRef.current = new WebSocket('ws://10.125.163.1:8000/ws');
           }, 100); // Try to reconnect after 1 second
         }
     };
