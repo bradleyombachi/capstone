@@ -4,31 +4,10 @@ from services import process_frame
 import os
 import base64
 import tensorflow as tf
-import webcolors
+import math
 
 
 router = APIRouter()
-
-def get_color_name(rgb_tuple):
-    try:
-        # Try to get the exact color name
-        color_name = webcolors.rgb_to_name(rgb_tuple)
-    except ValueError:
-        # If there's no exact color, get the closest one
-        closest_name = get_closest_color_name(rgb_tuple)
-        return closest_name
-    return color_name
-
-def get_closest_color_name(rgb_tuple):
-    min_distance = float('inf')
-    closest_name = None
-    for hex_value, color_name in webcolors.CSS3_HEX_TO_NAMES.items():
-        r_c, g_c, b_c = webcolors.hex_to_rgb(hex_value)
-        distance = (r_c - rgb_tuple[0])**2 + (g_c - rgb_tuple[1])**2 + (b_c - rgb_tuple[2])**2
-        if distance < min_distance:
-            min_distance = distance
-            closest_name = color_name
-    return closest_name
 
 
 @router.get("/")
@@ -86,6 +65,70 @@ input_dir = os.path.join(script_dir, '..', 'input')
 bg_image_name = "background_backlit_B.jpg"
 bg_image_path = os.path.join(input_dir, bg_image_name)
 
+KNOWN_COLORS = {
+    'black': (0, 0, 0),
+    'white': (255, 255, 255),
+    
+    # Shades of Red
+    'red': (255, 0, 0),
+    'light_red': (255, 102, 102),
+    'dark_red': (139, 0, 0),
+
+    # Shades of Green
+    'green': (0, 255, 0),
+    'light_green': (144, 238, 144),
+    'dark_green': (0, 100, 0),
+
+    # Shades of Blue
+    'blue': (0, 0, 255),
+    'light_blue': (173, 216, 230),
+    'dark_blue': (0, 0, 139),
+
+    # Shades of Yellow
+    'yellow': (255, 255, 0),
+    'light_yellow': (255, 255, 102),
+    'dark_yellow': (204, 204, 0),
+
+    # Shades of Cyan
+    'cyan': (0, 255, 255),
+    'light_cyan': (224, 255, 255),
+    'dark_cyan': (0, 139, 139),
+
+    # Shades of Magenta
+    'magenta': (255, 0, 255),
+    'light_magenta': (255, 102, 255),
+    'dark_magenta': (139, 0, 139),
+
+    # # Shades of Gray
+    # 'light_gray': (211, 211, 211),
+    # 'gray': (128, 128, 128),
+    # 'dark_gray': (64, 64, 64),
+
+    # Shades of Orange
+    'orange': (255, 165, 0),
+    'light_orange': (255, 200, 102),
+    'dark_orange': (255, 140, 0),
+
+    # Shades of Purple
+    'purple': (128, 0, 128),
+    'light_purple': (216, 191, 216),
+    'dark_purple': (75, 0, 130)
+}
+
+def euclidean_distance(color1, color2):
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(color1, color2)))
+
+def closest_color(input_color):
+    closest_name = None
+    min_distance = float('inf')
+    
+    for color_name, known_color in KNOWN_COLORS.items():
+        distance = euclidean_distance(input_color, known_color)
+        if distance < min_distance:
+            min_distance = distance
+            closest_name = color_name
+    
+    return closest_name
 @router.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -107,9 +150,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 data = await websocket.receive_text()
                 print("Received data from client")
                 valid_contours,brick,average_color = process_frame(data, model)
-                
-                average_color = get_color_name(average_color)
+                print(f"Average color RGB values: {average_color}")  # Debugging output
 
+                average_color = closest_color(average_color)
                 response = {
                     "contours": valid_contours,
                     "brickGuess" : brick,

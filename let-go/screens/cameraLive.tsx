@@ -23,7 +23,7 @@ export default function CameraViewTest() {
   const BATCH_SIZE = 5;
   
   useEffect(() => {
-    const ws = new WebSocket('ws://10.125.163.1:8000/ws');
+    const ws = new WebSocket('ws://10.6.246.8:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -78,6 +78,10 @@ export default function CameraViewTest() {
       return () => clearInterval(interval);
     }
   }, [permission]);
+
+  useEffect(() => {
+    console.log(guessLabel)
+  }, [guessLabel])
 
   const sendFrameToServer = async () => {
     if (cameraRef.current && wsRef.current) {
@@ -153,8 +157,25 @@ export default function CameraViewTest() {
       const animBox = animatedBoxesRef.current.get(index);
       if (!animBox) return null;
       return (
+        <React.Fragment key={index}>
+        <Animated.Text
+          style={{
+            position: 'absolute',
+            left: animBox.left,
+            top: Animated.subtract(animBox.top, 20), 
+            color: 'white',
+            backgroundColor: 'black',
+            paddingHorizontal: 5,
+            paddingVertical: 2,
+            borderRadius: 5,
+            fontSize: 14,
+            zIndex: 1,
+          }}
+        >
+          {guessLabel}
+        </Animated.Text>
+        
         <Animated.View
-          key={index}
           style={{
             position: 'absolute',
             borderColor: 'green',
@@ -165,6 +186,7 @@ export default function CameraViewTest() {
             height: animBox.height,
           }}
         />
+      </React.Fragment>
       );
     });
   };
