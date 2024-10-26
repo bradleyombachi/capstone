@@ -66,38 +66,38 @@ bg_image_name = "background_backlit_B.jpg"
 bg_image_path = os.path.join(input_dir, bg_image_name)
 
 KNOWN_COLORS = {
-    'black': (0, 0, 0),
-    'white': (255, 255, 255),
+    'Black': (0, 0, 0),
+    'White': (255, 255, 255),
     
     # Shades of Red
-    'red': (255, 0, 0),
-    'light_red': (255, 102, 102),
-    'dark_red': (139, 0, 0),
+    'Red': (255, 0, 0),
+    'Light Red': (255, 102, 102),
+    'Dark Red': (139, 0, 0),
 
     # Shades of Green
-    'green': (0, 255, 0),
-    'light_green': (144, 238, 144),
-    'dark_green': (0, 100, 0),
+    'Green': (0, 255, 0),
+    'Light Green': (144, 238, 144),
+    'Dark Green': (0, 100, 0),
 
     # Shades of Blue
-    'blue': (0, 0, 255),
-    'light_blue': (173, 216, 230),
-    'dark_blue': (0, 0, 139),
+    'Blue': (0, 0, 255),
+    'Light Blue': (173, 216, 230),
+    'Dark Blue': (0, 0, 139),
 
     # Shades of Yellow
-    'yellow': (255, 255, 0),
-    'light_yellow': (255, 255, 102),
-    'dark_yellow': (204, 204, 0),
+    'Yellow': (255, 255, 0),
+    'Light Yellow': (255, 255, 102),
+    'Dark Yellow': (204, 204, 0),
 
     # Shades of Cyan
-    'cyan': (0, 255, 255),
-    'light_cyan': (224, 255, 255),
-    'dark_cyan': (0, 139, 139),
+    'Cyan': (0, 255, 255),
+    'Light Cyan': (224, 255, 255),
+    'Dark Cyan': (0, 139, 139),
 
     # Shades of Magenta
-    'magenta': (255, 0, 255),
-    'light_magenta': (255, 102, 255),
-    'dark_magenta': (139, 0, 139),
+    'Magenta': (255, 0, 255),
+    'Light Magenta': (255, 102, 255),
+    'Dark Magenta': (139, 0, 139),
 
     # # Shades of Gray
     # 'light_gray': (211, 211, 211),

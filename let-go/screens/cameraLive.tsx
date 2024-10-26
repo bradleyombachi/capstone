@@ -1,8 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, TextInput } from 'react-native';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions, Animated, TextInput, ActivityIndicator } from 'react-native';
 import { Camera, CameraType, FlashMode } from 'expo-camera/legacy';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
+import { HistoryContext } from '../contexts/HistoryContext';
+import { useIsFocused } from '@react-navigation/native';
+
+
 
 
 type BoundingBox = [number, number, number, number];
@@ -14,6 +18,7 @@ export default function CameraViewTest() {
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([]);
   const cameraRef = useRef<Camera | null>(null);
   const [guessLabel, setguessLabel] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -21,7 +26,18 @@ export default function CameraViewTest() {
   const [yOffsetAdjustment, setYOffsetAdjustment] = useState(-0.055);
   const frameBuffer = useRef<string[]>([]); // Buffer to store frames
   const BATCH_SIZE = 5;
-  
+  const { history, addToHistory, clearHistory } = useContext(HistoryContext)
+  const isFocused = useIsFocused()
+
+
+  const getCurrentTimeInSeconds = () => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
   useEffect(() => {
     const ws = new WebSocket('ws://10.6.246.8:8000/ws');
     wsRef.current = ws;
@@ -30,7 +46,7 @@ export default function CameraViewTest() {
         console.log('WebSocket connection opened');
     };
 
-    ws.onmessage = (e) => {
+    ws.onmessage = async (e) => {
         const response: any = JSON.parse(e.data);
         console.log(response);
         const boxes:BoundingBox[] = response["contours"];  // Access contours directly
@@ -41,9 +57,33 @@ export default function CameraViewTest() {
             updateAnimatedBoxes(boxes);
             setBoundingBoxes(boxes);
             setguessLabel(response["brickGuess"]+response["color"]);
+            setIsLoading(false);
+            if (cameraRef.current && isFocused) {
+              try {
+                  const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 1.0, exif: false });
+                  console.log('Captured photo:', photo.uri); // Log or use the photo (e.g., send via WebSocket)
+                  const base64Photo = photo.base64; // Store the base64 of the photo
+                  const time = getCurrentTimeInSeconds();
+                  // Add base64 photo to history
+                  addToHistory({ 
+                      guess: response["brickGuess"], 
+                      color: response["color"], 
+                      photo: base64Photo,
+                      time: time
+                  });
+  
+                  if (response["brickGuess"]) {
+                      Speech.speak(response["color"]);
+                  }
+  
+              } catch (error) {
+                  console.error('Error taking picture:', error);
+              }
+          }
             if (response["brickGuess"]) {
               Speech.speak(response["brickGuess"]);
           }
+
         }else {
             console.error("Invalid bounding box format received: ", boxes)
         }
@@ -71,20 +111,25 @@ export default function CameraViewTest() {
   }, []);
 
   useEffect(() => {
-    if (permission?.granted) {
+    if (permission?.granted && isFocused) {
       const interval = setInterval(() => {
         sendFrameToServer();
       }, 5000); // Send frame every second
       return () => clearInterval(interval);
     }
-  }, [permission]);
+  }, [permission, isFocused]);
 
-  useEffect(() => {
-    console.log(guessLabel)
-  }, [guessLabel])
+  // useEffect(() => {
+  //   if (history && Array.isArray(history)) {
+  //     console.log("HISTORY:", history);
+  //   } else {
+  //     console.error("History is not an array or is undefined");
+  //   }
+  // }, [history]);
 
   const sendFrameToServer = async () => {
-    if (cameraRef.current && wsRef.current) {
+    if (isFocused && cameraRef.current && wsRef.current) {
+      if (!isFocused || !cameraRef.current) return;
       const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 1.0, exif: false });
       const imageData = photo.base64;
       if (imageData && wsRef.current.readyState === WebSocket.OPEN) {
@@ -193,11 +238,6 @@ export default function CameraViewTest() {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        value={guessLabel}
-        editable={false} // Make the textbox non-editable since it's updated by WebSocket
-        placeholder="Waiting for server response..."
-      />
       <Camera style={styles.camera} type={type} ref={cameraRef}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -211,6 +251,11 @@ export default function CameraViewTest() {
         </View>
         {renderAnimatedBoxes()}
       </Camera>
+      {isLoading && <View style={styles.darkScreen}>
+      </View>}
+      {isLoading && <View style={styles.loading}>
+            <ActivityIndicator size="large" />
+          </View>}
     </View>
   );
 }
@@ -238,4 +283,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: 'white',
   },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center', // Center horizontally
+    position: 'absolute',
+    width: '100%',    
+    height: '100%',
+  },
+  darkScreen: {
+    backgroundColor: 'black',
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    opacity: .4,
+    position: 'absolute'
+  }
 });
