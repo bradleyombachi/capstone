@@ -3,6 +3,122 @@ import os
 import numpy as np
 import base64
 from rembg import remove
+import math
+
+
+KNOWN_COLORS = {
+    'White' : (255,255,255),
+    'Gray' : (232, 232, 232),
+    'Gray' : (228, 232, 232),
+    'Gray' : (175, 181, 199),
+    'Gray' : (156, 156, 156),
+    'Gray' : (107, 90, 90),
+    'Gray' : (89, 93, 96),
+    'Black' : (33, 33, 33),
+    'Red' : (106, 14, 21),
+    'Red' : (179, 0, 6),
+    'Red' : (255, 85, 0),
+    'Red' : (255, 99, 38),
+    'Red' : (255, 125, 93),
+    'Red' : (255, 129, 114),
+    'Red' : (252, 199, 183),
+    'Red' : (197, 141, 128),
+    'Brown' : (80, 55, 47),
+    'Brown' : (115, 84, 66),
+    'Brown' : (107, 63, 34),
+    'Brown' : (130, 66, 42),
+    'Brown' : (153, 102, 62),
+    'Brown' : (161, 108, 66),
+    'Brown' : (179, 105, 78),
+    'Tan' : (184, 152, 105),
+    'Tan' : (238, 217, 164),
+    'Tan' : (254, 204, 176),
+    'Tan' : (251, 198, 133),
+    'Tan' : (255, 175, 125),
+    'Tan' : (251, 198, 133),
+    'Tan' : (206, 121, 66),
+    'Orange' : (234, 131, 57),
+    'Orange' : (239, 145, 33),
+    'Orange' : (230, 136, 29),
+    'Orange' : (179, 84, 8),
+    'Orange' : (178, 72, 23),
+    'Orange' : (250, 89, 71),
+    'Orange' : (255, 126, 20),
+    'Orange' : (255, 165, 49),
+    'Orange' : (255, 188, 54),
+    'Orange' : (255, 199, 0),
+    'Orange' : (255, 220, 164),
+    'Yellow' : (221, 152, 46),
+    'Yellow' : (255, 224, 1),
+    'Yellow' : (254, 232, 159),
+    'Yellow' : (255, 240, 140),
+    'Yellow' : (255, 252, 0),
+    'Green' : (219, 243, 85),
+    'Green' : (236, 238, 189),
+    'Green' : (231, 242, 167),
+    'Green' : (223, 224, 0),
+    'Green' : (196, 224, 0),
+    'Green' : (173, 210, 55),
+    'Dark Green' : (171, 169, 83),
+    'Dark Green' : (118, 117, 63),
+    'Dark Green' : (46, 85, 67),
+    'Green' : (0, 146, 61),
+    'Green' : (16, 203, 49),
+    'Green' : (145, 223, 140),
+    'Green' : (215, 238, 209),
+    'Green' : (162, 191, 163),
+    'Turquoise' : (0, 162, 159),
+    'Turquoise' : (0, 197, 188),
+    'Blue' : (188, 229, 220),
+    'Blue' : (36, 55, 87),
+    'Blue' : (36, 55, 87),
+    'Blue' : (0, 87, 166),
+    'Blue' : (0, 159, 224),
+    'Blue' : (93, 191, 228),
+    'Blue' : (125, 193, 216),
+    'Blue' : (106, 206, 224),
+    'Blue' : (138, 212, 225),
+    'Blue' : (130, 173, 216),
+    'Blue' : (188, 209, 237),
+    'Blue' : (200, 217, 225),
+    'Blue' : (136, 153, 171),
+    'Blue' : (32, 50, 176),
+    'Blue' : (52, 72, 164),
+    'Blue' : (80, 108, 239),
+    'Purple' : (120, 98, 206),
+    'Purple' : (147, 145, 228),
+    'Purple' : (205, 204, 238),
+    'Purple' : (201, 202, 226),
+    'Purple' : (95, 38, 131),
+    'Purple' : (122, 35, 141),
+    'Purple' : (175, 49, 149),
+    'Purple' : (198, 137, 217),
+    'Purple' : (211, 189, 227),
+    'Purple' : (224, 170, 217),
+    'Purple' : (181, 125, 165),
+    'Pink' : (183, 34, 118),
+    'Pink' : (239, 91, 179),
+    'Pink' : (247, 133, 177),
+    'Pink' : (247, 188, 218),
+    'Pink' : (245, 205, 214),
+    'Pink' : (242, 211, 209),
+}
+
+def euclidean_distance(color1, color2):
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(color1, color2)))
+
+def closest_color(input_color):
+    closest_name = None
+    min_distance = float('inf')
+    
+    for color_name, known_color in KNOWN_COLORS.items():
+        distance = euclidean_distance(input_color, known_color)
+        if distance < min_distance:
+            min_distance = distance
+            closest_name = color_name
+    
+    return closest_name
+
 
 # Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -136,6 +252,10 @@ def process_frame(image_data, model):
     # Save the output image with bounding boxes
     output_image_path = os.path.join(output_dir, "output_with_boxes.jpg")
     #cv2.imwrite(output_image_path, image_with_boxes)
+
+
+
+    average_color = closest_color(average_color)
 
     return valid_contours, prediction_label, average_color
 
