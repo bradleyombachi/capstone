@@ -56,7 +56,7 @@ export default function CameraViewTest() {
         if (Array.isArray(boxes) && boxes.every(box => Array.isArray(box) && box.length === 4 )) {
             updateAnimatedBoxes(boxes);
             setBoundingBoxes(boxes);
-            setguessLabel(response["brickGuess"]+response["color"]);
+            setguessLabel(response["color"]+ " " + response["brickGuess"]);
             setIsLoading(false);
             if (cameraRef.current && isFocused) {
               try {
