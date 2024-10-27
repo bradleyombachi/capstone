@@ -15,6 +15,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import ColorPicker, { Panel3, Swatches, Preview, OpacitySlider, HueSlider } from 'reanimated-color-picker';
 
 
+
 const Settings = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { customFontSize, setSmall, setMedium, setLarge } = useFontSize();
@@ -23,6 +24,7 @@ const Settings = () => {
     console.log(`Current font size is: ${customFontSize}`);
   }, [customFontSize]); // Dependency array includes fontSize
   const [showModal, setShowModal] = useState(false);
+  const [language, setLanguage] = useState('English')
 
   const onSelectColor = ({ hex }: { hex: string }) => {
     // do something with the selected color.
@@ -140,11 +142,37 @@ const Settings = () => {
               <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>
                 Voice Language
               </Text>
-              <View style={{flex: 1, alignItems: 'flex-end'}}>
+              <Menu style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', borderRadius: 50 }}>
+          <MenuTrigger>
+            <Text style={{ color: '#787878', fontSize: customFontSize }}>
+              {language}
+            </Text>
+          </MenuTrigger>
+          <View style={{ justifyContent: 'center' }}>
+            <Entypo name="select-arrows" size={16} color="#787878" />
+          </View>
+          <MenuOptions customStyles={{
+            optionWrapper: {
+              backgroundColor: isDarkMode ? 'black' : 'white',
+            },
+            optionText: {
+              color: '#787878',
+              fontSize: customFontSize,
+            },
+          }}>
+            <MenuOption onSelect={() => setLanguage('English')}>
+              <Text style={{ color: '#787878', fontSize: customFontSize }}>English</Text>
+            </MenuOption>
+            <MenuOption onSelect={() => setLanguage('Spanish')}>
+              <Text style={{ color: '#787878', fontSize: customFontSize }}>Spanish</Text>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
+              {/* <View style={{flex: 1, alignItems: 'flex-end'}}>
                 <Text style={styles.languageText}>
                   English
                 </Text>
-              </View>
+              </View> */}
             </View>
             
       </View>

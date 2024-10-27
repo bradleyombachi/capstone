@@ -5,8 +5,7 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
 import { HistoryContext } from '../contexts/HistoryContext';
 import { useIsFocused } from '@react-navigation/native';
-
-
+import { useLanguage } from '../contexts/LanguageContext';
 
 
 type BoundingBox = [number, number, number, number];
@@ -27,8 +26,8 @@ export default function CameraViewTest() {
   const frameBuffer = useRef<string[]>([]); // Buffer to store frames
   const BATCH_SIZE = 5;
   const { history, addToHistory, clearHistory } = useContext(HistoryContext)
-  const isFocused = useIsFocused()
-
+  const isFocused = useIsFocused();
+  const { language } = useLanguage();
 
   const getCurrentTimeInSeconds = () => {
     const now = new Date();
@@ -73,7 +72,7 @@ export default function CameraViewTest() {
                   });
   
                   if (response["brickGuess"]) {
-                      Speech.speak(response["color"]);
+                      Speech.speak(response["color"], { language });
                   }
   
               } catch (error) {
@@ -81,7 +80,7 @@ export default function CameraViewTest() {
               }
           }
             if (response["brickGuess"]) {
-              Speech.speak(response["brickGuess"]);
+              Speech.speak(response["brickGuess"], { language });
           }
 
         }else {

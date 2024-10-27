@@ -11,6 +11,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { HistoryProvider } from './contexts/HistoryContext'
 import { FontSizeProvider } from './contexts/FontContext';
 import { MenuProvider } from 'react-native-popup-menu';
+import { LanguageProvider } from './contexts/LanguageContext'
 
 
 
@@ -22,6 +23,7 @@ export default function App() {
       <ThemeProvider>
         <HistoryProvider>
           <FontSizeProvider>
+            <LanguageProvider>
             <MenuProvider>
       <Tab.Navigator  
       initialRouteName="Camera"
@@ -67,6 +69,7 @@ export default function App() {
           }}/>
       </Tab.Navigator>
       </MenuProvider>
+      </LanguageProvider>
       </FontSizeProvider>
       </HistoryProvider>
       </ThemeProvider>
