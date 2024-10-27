@@ -39,7 +39,7 @@ export default function CameraViewTest() {
   };
 
   useEffect(() => {
-    const ws = new WebSocket('ws://10.6.246.8:8000/ws');
+    const ws = new WebSocket('ws://192.168.1.152:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {

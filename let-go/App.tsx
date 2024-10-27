@@ -10,6 +10,8 @@ import { FontAwesome6, Feather, FontAwesome } from '@expo/vector-icons';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { HistoryProvider } from './contexts/HistoryContext'
 import { FontSizeProvider } from './contexts/FontContext';
+import { MenuProvider } from 'react-native-popup-menu';
+
 
 
 const Tab = createBottomTabNavigator();
@@ -20,6 +22,7 @@ export default function App() {
       <ThemeProvider>
         <HistoryProvider>
           <FontSizeProvider>
+            <MenuProvider>
       <Tab.Navigator  
       initialRouteName="Camera"
       screenOptions={{
@@ -63,6 +66,7 @@ export default function App() {
             )
           }}/>
       </Tab.Navigator>
+      </MenuProvider>
       </FontSizeProvider>
       </HistoryProvider>
       </ThemeProvider>

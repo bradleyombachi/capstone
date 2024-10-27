@@ -31,6 +31,7 @@
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "~2.16.1",
     "react-native-popup-menu": "^0.16.1",
+    "react-native-reanimated": "~3.10.1",
     "react-native-reanimated-carousel": "^3.5.1",
     "react-native-screens": "3.31.1",
     "reanimated-color-picker": "^3.0.4"

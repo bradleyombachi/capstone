@@ -109,11 +109,11 @@ const Settings = () => {
                     <Preview style={{marginBottom: 20}}/>
                     <Panel3 style={{marginBottom: 20}}/>
                   </ColorPicker>
-
-                  <Button title="Close" onPress={() => setShowModal(false)} />
+                  <View style={{flexDirection: 'row'}}>
+                  <Button title='Close' onPress={() => setShowModal(false)} color="white"/>
+                  </View>
               </View>
 
-              <Button title='Ok' onPress={() => setShowModal(false)} />
             </Modal>
           </View>
           <TouchableOpacity onPress={() => setShowModal(true)}>         
@@ -148,7 +148,10 @@ const Settings = () => {
             </View>
             
       </View>
+
       </ScrollView>
+      {showModal && <View style={styles.darkScreen}>
+      </View>}
     </View>
   )
 }
@@ -244,5 +247,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  darkScreen: {
+    backgroundColor: 'black',
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    opacity: .6,
+    position: 'absolute'
+  }
 
 });
