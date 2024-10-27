@@ -8,7 +8,8 @@ import History from './screens/History';
 import Settings from './screens/Settings';
 import { FontAwesome6, Feather, FontAwesome } from '@expo/vector-icons';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { HistoryContext, HistoryProvider } from './contexts/HistoryContext'
+import { HistoryProvider } from './contexts/HistoryContext'
+import { FontSizeProvider } from './contexts/FontContext';
 
 
 const Tab = createBottomTabNavigator();
@@ -18,6 +19,7 @@ export default function App() {
     <NavigationContainer>
       <ThemeProvider>
         <HistoryProvider>
+          <FontSizeProvider>
       <Tab.Navigator  
       initialRouteName="Camera"
       screenOptions={{
@@ -61,6 +63,7 @@ export default function App() {
             )
           }}/>
       </Tab.Navigator>
+      </FontSizeProvider>
       </HistoryProvider>
       </ThemeProvider>
     </NavigationContainer>

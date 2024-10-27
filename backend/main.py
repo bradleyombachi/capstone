@@ -43,4 +43,4 @@ app.include_router(api_router)
 
 # run the file manually to test on ios
 if __name__ == "__main__":
-    uvicorn.run(app, host="10.6.246.8", port=8000)
+    uvicorn.run(app, host="192.168.1.152", port=8000)

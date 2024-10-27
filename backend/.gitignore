@@ -3,3 +3,4 @@ uploads
 output
 /routes/__pycache__
 /services/__pycache__
+/venv
