@@ -24,7 +24,8 @@ const Settings = () => {
     console.log(`Current font size is: ${customFontSize}`);
   }, [customFontSize]); // Dependency array includes fontSize
   const [showModal, setShowModal] = useState(false);
-  const [language, setLanguage] = useState('English')
+  const [language, setLanguage] = useState('en')
+  const languageLabel = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'English';
 
   const onSelectColor = ({ hex }: { hex: string }) => {
     // do something with the selected color.
@@ -145,7 +146,7 @@ const Settings = () => {
               <Menu style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', borderRadius: 50 }}>
           <MenuTrigger>
             <Text style={{ color: '#787878', fontSize: customFontSize }}>
-              {language}
+              {languageLabel}
             </Text>
           </MenuTrigger>
           <View style={{ justifyContent: 'center' }}>
@@ -160,10 +161,10 @@ const Settings = () => {
               fontSize: customFontSize,
             },
           }}>
-            <MenuOption onSelect={() => setLanguage('English')}>
+            <MenuOption onSelect={() => setLanguage('en')}>
               <Text style={{ color: '#787878', fontSize: customFontSize }}>English</Text>
             </MenuOption>
-            <MenuOption onSelect={() => setLanguage('Spanish')}>
+            <MenuOption onSelect={() => setLanguage('es')}>
               <Text style={{ color: '#787878', fontSize: customFontSize }}>Spanish</Text>
             </MenuOption>
           </MenuOptions>
