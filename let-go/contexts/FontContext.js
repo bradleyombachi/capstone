@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
-// Create a context with default font size and functions to update it
 const FontSizeContext = createContext({
-  customFontSize: 16, // Default font size
+  customFontSize: 16, 
   setSmall: () => {},
   setMedium: () => {},
   setLarge: () => {},
@@ -11,7 +10,7 @@ const FontSizeContext = createContext({
 export const useFontSize = () => useContext(FontSizeContext);
 
 export const FontSizeProvider = ({ children }) => {
-  const [customFontSize, setFontSize] = useState(16); // Default font size state
+  const [customFontSize, setFontSize] = useState(16); 
 
   const setSmall = () => setFontSize(12);
   const setMedium = () => setFontSize(16);

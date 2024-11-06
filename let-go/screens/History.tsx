@@ -1,10 +1,11 @@
 import React, { useContext } from 'react'
-import { Text, View, StyleSheet, FlatList, Image } from 'react-native'
+import { Text, View, StyleSheet, FlatList, Image, TouchableOpacity, Modal } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext'
 import { useState, useRef, useEffect } from 'react';
 import { HistoryContext } from '../contexts/HistoryContext';
 import axios from 'axios';
+import { useColor } from '../contexts/ColorContext'
 
 type ItemProps = {
   brickColor: string,
@@ -12,11 +13,15 @@ type ItemProps = {
   brickDescription: string,
   isDarkMode: boolean
   photo: string
+  color: string
+  onImagePress: () => void
 };
 
 
-const Item = ({brickColor, time, brickDescription, isDarkMode, photo}: ItemProps) => (
-  <View style={[styles.item, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
+const Item = ({brickColor, time, brickDescription, isDarkMode, photo, color, onImagePress}: ItemProps) => (
+  <TouchableOpacity 
+    style={[styles.item, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}
+    onPress={onImagePress}>
     <View style={{flex: 1, flexDirection: 'row'}}>
       <Image 
         source={{ uri: `data:image/jpeg;base64,${photo}` }} 
@@ -28,15 +33,24 @@ const Item = ({brickColor, time, brickDescription, isDarkMode, photo}: ItemProps
         <Text style={styles.time}>{time}</Text>
       </View>
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'flex-end'}}>
-        <MaterialIcons name="navigate-next" size={24} color="#1abc9c" />
+        <MaterialIcons name="navigate-next" size={24} color={color} />
       </View>
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 const History = () => {
   const { isDarkMode } = useTheme();
   const { history } = useContext(HistoryContext)
+  const { colorHex } = useColor()
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
+
+  const handleImagePress = (photo: string) => {
+    setSelectedImage(photo);
+    setShowModal(true);
+  };
+
   return (
     <View style = {[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
       <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>History</Text>
@@ -50,10 +64,28 @@ const History = () => {
         brickDescription={item.guess}
         isDarkMode={isDarkMode}
         photo={item.photo}
+        color = {colorHex}
+        onImagePress={() => handleImagePress(item.photo)}
         />}
         keyExtractor={(item, index) => index.toString()} // Unique key for each item
       />
       </View>
+
+      <Modal
+        visible={showModal}
+        transparent={true}
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Image 
+            source={{ uri: `data:image/jpeg;base64,${selectedImage}` }} 
+            style={styles.modalImage} 
+          />
+          <TouchableOpacity onPress={() => setShowModal(false)}>
+            <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -110,8 +142,17 @@ const styles = StyleSheet.create({
   brickDescription: {
     color: '#5c5b5b',
     fontWeight: '500'
-  }
-
-  
-
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalImage: {
+    width: 300,
+    height: 300,
+    marginBottom: 20,
+    borderRadius: 20
+  },
 });

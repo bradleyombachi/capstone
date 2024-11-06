@@ -12,9 +12,7 @@ import { HistoryProvider } from './contexts/HistoryContext'
 import { FontSizeProvider } from './contexts/FontContext';
 import { MenuProvider } from 'react-native-popup-menu';
 import { LanguageProvider } from './contexts/LanguageContext'
-
-
-
+import {ColorProvider, useColor } from './contexts/ColorContext'
 const Tab = createBottomTabNavigator();
 
 export default function App() {
@@ -24,8 +22,24 @@ export default function App() {
         <HistoryProvider>
           <FontSizeProvider>
             <LanguageProvider>
-            <MenuProvider>
-      <Tab.Navigator  
+              <MenuProvider>
+                <ColorProvider>
+                  <MainTabNavigator />
+                </ColorProvider>
+              </MenuProvider>
+            </LanguageProvider>
+          </FontSizeProvider>
+        </HistoryProvider>
+      </ThemeProvider>
+    </NavigationContainer>
+  );
+}
+
+function MainTabNavigator() {
+  const { colorHex } = useColor(); // Access colorHex from ColorContext
+
+  return (
+    <Tab.Navigator
       initialRouteName="Camera"
       screenOptions={{
         tabBarShowLabel: false,
@@ -35,44 +49,40 @@ export default function App() {
           borderTopWidth: 0,
         },
         tabBarInactiveTintColor: 'white',
-        tabBarActiveTintColor: '#1abc9c', 
+        tabBarActiveTintColor: colorHex || '#1abc9c', // Apply colorHex here
         tabBarIconStyle: {
-          marginTop: 15
+          marginTop: 15,
         },
         headerShown: false,
-        
-        }}>
-
-        <Tab.Screen 
-          name="History" 
-          component={History} 
-          options={{
-            tabBarIcon: ({ color, size }) => ( 
-        <FontAwesome6 name="clock-rotate-left" size={size} color={color} />
-            )
-          }}/>
-        <Tab.Screen 
-          name="Camera" 
-          component={CameraViewLive} 
-          options={{
-            tabBarIcon: ({ color, size }) => ( 
-              <FontAwesome name="camera" size={size} color={color} />
-            ),
-          }}/>
-        <Tab.Screen 
-          name="Settings" 
-          component={Settings} 
-          options={{
-            tabBarIcon: ({ color, size }) => ( 
-              <FontAwesome6 name="gear" size={size} color={color} />
-            )
-          }}/>
-      </Tab.Navigator>
-      </MenuProvider>
-      </LanguageProvider>
-      </FontSizeProvider>
-      </HistoryProvider>
-      </ThemeProvider>
-    </NavigationContainer>
+      }}
+    >
+      <Tab.Screen
+        name="History"
+        component={History}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome6 name="clock-rotate-left" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Camera"
+        component={CameraViewLive}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome name="camera" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={Settings}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome6 name="gear" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
   );
 }

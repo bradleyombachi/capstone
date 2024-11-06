@@ -13,6 +13,7 @@ import {
 } from 'react-native-popup-menu';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import ColorPicker, { Panel3, Swatches, Preview, OpacitySlider, HueSlider } from 'reanimated-color-picker';
+import { useColor } from '../contexts/ColorContext';
 
 
 
@@ -20,17 +21,20 @@ const Settings = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { customFontSize, setSmall, setMedium, setLarge } = useFontSize();
   const fontSizeLabel = customFontSize === 12 ? 'Small' : customFontSize === 16 ? 'Medium' : 'Large';
-  useEffect(() => {
-    console.log(`Current font size is: ${customFontSize}`);
-  }, [customFontSize]); // Dependency array includes fontSize
   const [showModal, setShowModal] = useState(false);
   const [language, setLanguage] = useState('en')
   const languageLabel = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'English';
+  const {colorHex, setColorHex} = useColor();
+  const [brightness, setBrightness] = useState(1);
+
 
   const onSelectColor = ({ hex }: { hex: string }) => {
-    // do something with the selected color.
-    console.log(hex);
+    setColorHex(hex);
   };
+  
+  useEffect(()=> {
+    console.log(`HEX: ${colorHex}`)
+  }, [colorHex])
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2'}]}>
@@ -43,7 +47,7 @@ const Settings = () => {
           <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>High Contrast Mode</Text>
           <View style={styles.highContrast}>
           <Switch
-        trackColor={{false: '#767577', true: '#1abc9c'}}
+        trackColor={{false: '#767577', true: colorHex}}
         thumbColor={isDarkMode ? 'white' : 'white'}
         ios_backgroundColor="#3e3e3e"
         onValueChange={toggleTheme}
@@ -104,23 +108,25 @@ const Settings = () => {
             <Modal 
               visible={showModal} 
               animationType='slide'
-              transparent={true} // Make the background semi-transparent for better visibility
+              transparent={true}
               onRequestClose={() => setShowModal(false)} 
               >
                <View style={styles.modalContainer}>
-                  <ColorPicker style={{ width: '70%' }} value="red" onComplete={onSelectColor}>
-                    <Preview style={{marginBottom: 20}}/>
+                  <ColorPicker style={{ width: '70%' }} value={colorHex} onComplete={onSelectColor}>
+                    <Preview style={{marginBottom: 20, borderRadius: 50}} hideInitialColor/>
                     <Panel3 style={{marginBottom: 20}}/>
                   </ColorPicker>
                   <View style={{flexDirection: 'row'}}>
-                  <Button title='Close' onPress={() => setShowModal(false)} color="white"/>
+                  <Button title='Apply' onPress={() => {
+                    setShowModal(false);
+                  }} color="white"/>
                   </View>
               </View>
 
             </Modal>
           </View>
           <TouchableOpacity onPress={() => setShowModal(true)}>         
-            <FontAwesome name="circle" size={30} color="#1abc9c" />
+            <FontAwesome name="circle" size={30} color={colorHex} />
           </TouchableOpacity>
         </View>
       </View>
@@ -135,7 +141,7 @@ const Settings = () => {
           </View>
             <View style={styles.volumeSliderContainer}>
               <MultiSlider
-              selectedStyle={{backgroundColor: '#1abc9c'}}
+              selectedStyle={{backgroundColor: colorHex}}
                 />
             </View>
     <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
@@ -169,18 +175,9 @@ const Settings = () => {
             </MenuOption>
           </MenuOptions>
         </Menu>
-              {/* <View style={{flex: 1, alignItems: 'flex-end'}}>
-                <Text style={styles.languageText}>
-                  English
-                </Text>
-              </View> */}
-            </View>
-            
+            </View>    
       </View>
-
-      </ScrollView>
-      {showModal && <View style={styles.darkScreen}>
-      </View>}
+  </ScrollView>
     </View>
   )
 }
@@ -275,14 +272,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
   },
-  darkScreen: {
-    backgroundColor: 'black',
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    opacity: .6,
-    position: 'absolute'
-  }
 
 });
