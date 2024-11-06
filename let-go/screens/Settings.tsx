@@ -16,16 +16,24 @@ import ColorPicker, { Panel3, Swatches, Preview, OpacitySlider, HueSlider } from
 import { useColor } from '../contexts/ColorContext';
 
 
+const fontSizes = {
+  sm: 12,
+  md: 16,
+  lg: 20,
+};
 
 const Settings = () => {
   const { isDarkMode, toggleTheme } = useTheme();
-  const { customFontSize, setSmall, setMedium, setLarge } = useFontSize();
-  const fontSizeLabel = customFontSize === 12 ? 'Small' : customFontSize === 16 ? 'Medium' : 'Large';
+  const { customFontSize = 'md', setSmall, setMedium, setLarge } = useFontSize();
+  const fontSizeLabel = customFontSize === 'sm' ? 'Small' : customFontSize === 'md' ? 'Medium' : 'Large';
   const [showModal, setShowModal] = useState(false);
   const [language, setLanguage] = useState('en')
   const languageLabel = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'English';
   const {colorHex, setColorHex} = useColor();
   const [brightness, setBrightness] = useState(1);
+
+    const getFontSize = (size: string) => fontSizes[size as keyof typeof fontSizes];
+
 
 
   const onSelectColor = ({ hex }: { hex: string }) => {
@@ -44,7 +52,7 @@ const Settings = () => {
       <Text style={[styles.visibility, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>VISIBILITY</Text>
       <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
         <View style = {styles.listItem}>
-          <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>High Contrast Mode</Text>
+          <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}>High Contrast Mode</Text>
           <View style={styles.highContrast}>
           <Switch
         trackColor={{false: '#767577', true: colorHex}}
@@ -57,11 +65,11 @@ const Settings = () => {
         </View>
         <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
         <View style={styles.listItem}>
-          <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}> Font Size </Text>
+          <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}> Font Size </Text>
           <Menu style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end', borderRadius: 50}}>
             <MenuTrigger 
             children={
-              <Text style={{color: '#787878', fontSize: customFontSize}}>
+              <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>
               {fontSizeLabel}
             </Text>
           }
@@ -75,17 +83,17 @@ const Settings = () => {
                   },
                   optionText: {
                     color: '#787878',
-                    fontSize: customFontSize
+                    fontSize: getFontSize(customFontSize)
                   },
                 }}>
               <MenuOption onSelect={setSmall} >
-                <Text style={{color: '#787878', fontSize: customFontSize}}>Small</Text>
+                <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>Small</Text>
               </MenuOption>
               <MenuOption onSelect={setMedium} >
-                <Text style={{color: '#787878', fontSize: customFontSize}}>Medium</Text>
+                <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>Medium</Text>
               </MenuOption>
               <MenuOption onSelect={setLarge} >
-                <Text style={{color: '#787878', fontSize: customFontSize}}>Large</Text>
+                <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>Large</Text>
               </MenuOption>
             </MenuOptions>
           </Menu>
@@ -102,7 +110,7 @@ const Settings = () => {
         <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
 
         <View style={styles.listItem}>
-        <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}> Color Theme </Text>
+        <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}> Color Theme </Text>
         <View style={{flex: 1, alignItems: 'flex-end', marginLeft: 130, borderRadius: 10}}>
             <View style={styles.colorPicker}>
             <Modal 
@@ -135,7 +143,7 @@ const Settings = () => {
       <Text style={[styles.audio, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>AUDIO</Text>
       <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
           <View style={styles.volumeText}>
-            <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>
+            <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}>
               Volume
             </Text>
           </View>
@@ -146,12 +154,12 @@ const Settings = () => {
             </View>
     <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
             <View style={styles.listItem}>
-              <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: customFontSize}]}>
+              <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}>
                 Voice Language
               </Text>
               <Menu style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', borderRadius: 50 }}>
           <MenuTrigger>
-            <Text style={{ color: '#787878', fontSize: customFontSize }}>
+            <Text style={{ color: '#787878', fontSize: getFontSize(customFontSize) }}>
               {languageLabel}
             </Text>
           </MenuTrigger>
@@ -164,14 +172,14 @@ const Settings = () => {
             },
             optionText: {
               color: '#787878',
-              fontSize: customFontSize,
+              fontSize: getFontSize(customFontSize),
             },
           }}>
             <MenuOption onSelect={() => setLanguage('en')}>
-              <Text style={{ color: '#787878', fontSize: customFontSize }}>English</Text>
+              <Text style={{ color: '#787878', fontSize: getFontSize(customFontSize) }}>English</Text>
             </MenuOption>
             <MenuOption onSelect={() => setLanguage('es')}>
-              <Text style={{ color: '#787878', fontSize: customFontSize }}>Spanish</Text>
+              <Text style={{ color: '#787878', fontSize: getFontSize(customFontSize) }}>Spanish</Text>
             </MenuOption>
           </MenuOptions>
         </Menu>

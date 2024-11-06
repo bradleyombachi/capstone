@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
 const FontSizeContext = createContext({
-  customFontSize: 16, 
+  customFontSize: 'md', 
   setSmall: () => {},
   setMedium: () => {},
   setLarge: () => {},
@@ -10,11 +10,11 @@ const FontSizeContext = createContext({
 export const useFontSize = () => useContext(FontSizeContext);
 
 export const FontSizeProvider = ({ children }) => {
-  const [customFontSize, setFontSize] = useState(16); 
+  const [customFontSize, setFontSize] = useState('md'); 
 
-  const setSmall = () => setFontSize(12);
-  const setMedium = () => setFontSize(16);
-  const setLarge = () => setFontSize(20);
+  const setSmall = () => setFontSize('sm');
+  const setMedium = () => setFontSize('md');
+  const setLarge = () => setFontSize('lg');
 
   return (
     <FontSizeContext.Provider value={{ customFontSize, setSmall, setMedium, setLarge }}>

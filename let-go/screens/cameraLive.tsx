@@ -6,9 +6,16 @@ import * as Speech from 'expo-speech';
 import { HistoryContext } from '../contexts/HistoryContext';
 import { useIsFocused } from '@react-navigation/native';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useFontSize } from '../contexts/FontContext';
 
 
 type BoundingBox = [number, number, number, number];
+
+const fontSizes = {
+  sm: 12,
+  md: 16,
+  lg: 20
+}
 
 export default function CameraViewTest() {
   const [type, setType] = useState(CameraType.back);
@@ -18,7 +25,9 @@ export default function CameraViewTest() {
   const cameraRef = useRef<Camera | null>(null);
   const [guessLabel, setguessLabel] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const { customFontSize } = useFontSize()
   
+  const getFontSize = (size: string) => fontSizes[size as keyof typeof fontSizes];
 
   const wsRef = useRef<WebSocket | null>(null);
   const animatedBoxesRef = useRef<Map<number, any>>(new Map());
@@ -212,7 +221,7 @@ export default function CameraViewTest() {
             paddingHorizontal: 5,
             paddingVertical: 2,
             borderRadius: 5,
-            fontSize: 14,
+            fontSize: getFontSize(customFontSize),
             zIndex: 1,
           }}
         >

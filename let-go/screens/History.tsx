@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { HistoryContext } from '../contexts/HistoryContext';
 import axios from 'axios';
 import { useColor } from '../contexts/ColorContext'
+import { useFontSize } from '../contexts/FontContext';
 
 type ItemProps = {
   brickColor: string,
@@ -15,22 +16,46 @@ type ItemProps = {
   photo: string
   color: string
   onImagePress: () => void
+  customFontSize: string
 };
 
+const fontSizes1 = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+}
 
-const Item = ({brickColor, time, brickDescription, isDarkMode, photo, color, onImagePress}: ItemProps) => (
+const fontSizes2 = {
+  sm: 10,
+  md: 14,
+  lg: 18,
+}
+
+const fontSizes3 = {
+  sm: 9,
+  md: 13,
+  lg: 17,
+}
+
+const getFontSize1 = (size: string) => fontSizes1[size as keyof typeof fontSizes1];
+
+const getFontSize2 = (size: string) => fontSizes2[size as keyof typeof fontSizes2];
+
+const getFontSize3 = (size: string) => fontSizes3[size as keyof typeof fontSizes3];
+
+const Item = ({brickColor, time, brickDescription, isDarkMode, photo, color, onImagePress, customFontSize}: ItemProps) => (
   <TouchableOpacity 
     style={[styles.item, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}
     onPress={onImagePress}>
-    <View style={{flex: 1, flexDirection: 'row'}}>
+    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
       <Image 
         source={{ uri: `data:image/jpeg;base64,${photo}` }} 
         style={styles.brickImage} 
       />
       <View>
-        <Text style={[styles.brickColor, {color: isDarkMode ? 'white' : 'black'}]}>{brickColor}</Text>
-        <Text style={[styles.brickDescription, {color: isDarkMode ? '#bfbdbd' : '#5c5b5b'}]}>{brickDescription}</Text>
-        <Text style={styles.time}>{time}</Text>
+        <Text style={[styles.brickColor, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize1(customFontSize)}]}>{brickColor}</Text>
+        <Text style={[styles.brickDescription, {color: isDarkMode ? '#bfbdbd' : '#5c5b5b', fontSize: getFontSize2(customFontSize)}]}>{brickDescription}</Text>
+        <Text style={[styles.time, { fontSize: getFontSize3(customFontSize)}]}>{time}</Text>
       </View>
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'flex-end'}}>
         <MaterialIcons name="navigate-next" size={24} color={color} />
@@ -45,6 +70,7 @@ const History = () => {
   const { colorHex } = useColor()
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
+  const { customFontSize } = useFontSize()
 
   const handleImagePress = (photo: string) => {
     setSelectedImage(photo);
@@ -53,7 +79,7 @@ const History = () => {
 
   return (
     <View style = {[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
-      <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>History</Text>
+      <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black', fontSize: 30}]}>History</Text>
       <View style={styles.listItemsContainer}>
       <FlatList
         data={[...history].reverse()}
@@ -66,6 +92,7 @@ const History = () => {
         photo={item.photo}
         color = {colorHex}
         onImagePress={() => handleImagePress(item.photo)}
+        customFontSize={customFontSize}
         />}
         keyExtractor={(item, index) => index.toString()} // Unique key for each item
       />
@@ -102,7 +129,6 @@ const styles = StyleSheet.create({
   },
   title: {
     paddingTop: 80,
-    fontSize: 30,
     fontWeight: '700',
     paddingLeft: 30
 
@@ -125,11 +151,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   brickColor: {
-    fontSize: 20,
     fontWeight: '600'
   },
   time: {
-    fontSize: 13,
     color: '#7a7878'
   },
   brickImage: {
@@ -137,7 +161,8 @@ const styles = StyleSheet.create({
     height: 70,
     marginRight: 10,
     borderRadius: 5,
-    backgroundColor: 'black'
+    backgroundColor: 'black',
+    alignItems: 'center'
   },
   brickDescription: {
     color: '#5c5b5b',
