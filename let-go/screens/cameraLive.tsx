@@ -47,7 +47,7 @@ export default function CameraViewTest() {
   };
 
   useEffect(() => {
-    const ws = new WebSocket('ws://10.6.246.8:8000/ws');
+    const ws = new WebSocket('ws://10.125.179.123:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -119,13 +119,14 @@ export default function CameraViewTest() {
   }, []);
 
   useEffect(() => {
-    if (permission?.granted && isFocused) {
-      const interval = setInterval(() => {
-        sendFrameToServer();
-      }, 5000); // Send frame every second
-      return () => clearInterval(interval);
-    }
-  }, [permission, isFocused]);
+    if (!isFocused || !permission?.granted) return;
+  
+    const interval = setInterval(() => {
+      sendFrameToServer();
+    }, 5000);
+  
+    return () => clearInterval(interval);
+  }, [isFocused, permission?.granted]);
 
   // useEffect(() => {
   //   if (history && Array.isArray(history)) {
@@ -136,17 +137,14 @@ export default function CameraViewTest() {
   // }, [history]);
 
   const sendFrameToServer = async () => {
-    if (isFocused && cameraRef.current && wsRef.current) {
-      if (!isFocused || !cameraRef.current) return;
+    if (cameraRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
       const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 1.0, exif: false });
-      const imageData = photo.base64;
-      if (imageData && wsRef.current.readyState === WebSocket.OPEN) {
-        
-        console.log('Sending image data to server'); // Debug print
-        wsRef.current.send(imageData);
-      }
+      const imageData = photo.base64 as string; 
+      console.log('Sending image data to server');
+      wsRef.current.send(imageData);
     }
   };
+  
 
   // function to animate bounding boxes 
   const updateAnimatedBoxes = (boxes: BoundingBox[]) => {
