@@ -23,7 +23,7 @@ export default function CameraViewTest() {
   const [permission, requestPermission] = Camera.useCameraPermissions();
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([]);
   const cameraRef = useRef<Camera | null>(null);
-  const [guessLabel, setguessLabel] = useState('');
+  const [guessLabel, setGuessLabel] = useState<string[]>([]);   
   const [isLoading, setIsLoading] = useState(true);
   const { customFontSize } = useFontSize()
   
@@ -46,8 +46,12 @@ export default function CameraViewTest() {
     return `${hours}:${minutes}:${seconds}`;
   };
 
+  const addNewLabel = (newLabel: string) => {
+    setGuessLabel((prevLabels) => [...prevLabels, newLabel]);
+  };
+
   useEffect(() => {
-    const ws = new WebSocket('ws://10.125.179.123:8000/ws');
+    const ws = new WebSocket('ws://10.125.218.50:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -57,44 +61,53 @@ export default function CameraViewTest() {
     ws.onmessage = async (e) => {
         const response: any = JSON.parse(e.data);
         console.log(response);
-        const boxes:BoundingBox[] = response["contours"];  // Access contours directly
-        const color = response["color"]
-
+       const boxes:BoundingBox[] = response["full_contours"];  // Access contours directly
+        
         console.log('Received boxes:', boxes);
-        if (Array.isArray(boxes) && boxes.every(box => Array.isArray(box) && box.length === 4 )) {
+        //if ( boxes.every(box => box.length === 4 )) {
+          for (let i = 0; i < response.length - 1; i++) {
+            console.log("michael mom is a whore");
+            let color = response["blocks"][i][0];
+            let contours_list = response["blocks"][i][1];
+            let prediction = response["blocks"][i][2];
+            console.log("Current data:", { color, contours_list, prediction });
             updateAnimatedBoxes(boxes);
-            setBoundingBoxes(boxes);
-            setguessLabel(response["color"]+ " " + response["brickGuess"]);
+            setBoundingBoxes(contours_list);
+            let label = color+" "+prediction;
+            addNewLabel(label);
+
+
+            Speech.speak(label[i], {language: language});
             setIsLoading(false);
-            if (cameraRef.current && isFocused) {
-              try {
+
+          if (cameraRef.current && isFocused) {
+            try {
                   const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 1.0, exif: false });
                   console.log('Captured photo:', photo.uri); // Log or use the photo (e.g., send via WebSocket)
                   const base64Photo = photo.base64; // Store the base64 of the photo
                   const time = getCurrentTimeInSeconds();
                   // Add base64 photo to history
                   addToHistory({ 
-                      guess: response["brickGuess"], 
-                      color: response["color"], 
+                      guess: label, 
+                      color: color, 
                       photo: base64Photo,
                       time: time
                   });
   
-                  if (response["brickGuess"]) {
-                      Speech.speak(response["color"], {language: language});
-                  }
-  
               } catch (error) {
                   console.error('Error taking picture:', error);
               }
+            }
+            else {
+              console.error("Invalid bounding box format received: ", boxes)
           }
-            if (response["brickGuess"]) {
-              Speech.speak(response["brickGuess"], { language });
+          //}
+  
           }
-
-        }else {
-            console.error("Invalid bounding box format received: ", boxes)
-        }
+          // updateAnimatedBoxes(boxes);
+          // setBoundingBoxes(boxes);
+          // setguessLabel(response["color"]+ " " + response["brickGuess"]);
+          
     };
 
     ws.onerror = (error) => {
@@ -105,7 +118,7 @@ export default function CameraViewTest() {
         console.log(`WebSocket connection closed: ${event.code}`);
         if (event.code !== 1000) { // Reconnect if the close code is not normal
           setTimeout(() => {
-            wsRef.current = new WebSocket('ws://10.6.246.8:8000/ws');
+            wsRef.current = new WebSocket('ws://10.125.218.50:8000/ws');
           }, 100); // Try to reconnect after 1 second
         }
     };
@@ -205,6 +218,7 @@ export default function CameraViewTest() {
 
   const renderAnimatedBoxes = () => {
     return boundingBoxes.map((_, index) => {
+      console.log(`BOX INDEX: ${index}`)
       const animBox = animatedBoxesRef.current.get(index);
       if (!animBox) return null;
       return (
@@ -223,7 +237,7 @@ export default function CameraViewTest() {
             zIndex: 1,
           }}
         >
-          {guessLabel}
+          {guessLabel[0]}
         </Animated.Text>
         
         <Animated.View

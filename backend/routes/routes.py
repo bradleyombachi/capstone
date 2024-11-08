@@ -5,7 +5,7 @@ import os
 import base64
 import tensorflow as tf
 import math
-
+import json
 
 router = APIRouter()
 
@@ -65,65 +65,7 @@ input_dir = os.path.join(script_dir, '..', 'input')
 bg_image_name = "background_backlit_B.jpg"
 bg_image_path = os.path.join(input_dir, bg_image_name)
 
-KNOWN_COLORS = {
-    'Black': (0, 0, 0),
-    'White': (255, 255, 255),
-    
-    # Shades of Red
-    'Red': (255, 0, 0),
-    'Light Red': (255, 102, 102),
-    'Dark Red': (139, 0, 0),
 
-    # Shades of Green
-    'Green': (0, 255, 0),
-    'Light Green': (144, 238, 144),
-    'Dark Green': (0, 100, 0),
-
-    # Shades of Blue
-    'Blue': (0, 0, 255),
-    'Light Blue': (173, 216, 230),
-    'Dark Blue': (0, 0, 139),
-
-    # Shades of Yellow
-    'Yellow': (255, 255, 0),
-    'Light Yellow': (255, 255, 102),
-    'Dark Yellow': (204, 204, 0),
-
-    # Shades of Cyan
-    'Cyan': (0, 255, 255),
-    'Light Cyan': (224, 255, 255),
-    'Dark Cyan': (0, 139, 139),
-
-    # Shades of Magenta
-    'Magenta': (255, 0, 255),
-    'Light Magenta': (255, 102, 255),
-    'Dark Magenta': (139, 0, 139),
-
-    # Shades of Orange
-    'Orange': (255, 165, 0),
-    'Light Orange': (255, 200, 102),
-    'Dark Orange': (255, 140, 0),
-
-    # Shades of Purple
-    'Purple': (128, 0, 128),
-    'Light Purple': (216, 191, 216),
-    'Dark Purple': (75, 0, 130)
-}
-
-def euclidean_distance(color1, color2):
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(color1, color2)))
-
-def closest_color(input_color):
-    closest_name = None
-    min_distance = float('inf')
-    
-    for color_name, known_color in KNOWN_COLORS.items():
-        distance = euclidean_distance(input_color, known_color)
-        if distance < min_distance:
-            min_distance = distance
-            closest_name = color_name
-    
-    return closest_name
 @router.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -144,15 +86,8 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 data = await websocket.receive_text()
                 print("Received data from client")
-                valid_contours,brick,average_color = process_frame(data, model)
-                print(f"Average color RGB values: {average_color}")  # Debugging output
+                response = process_frame(data, model)
 
-                average_color = closest_color(average_color)
-                response = {
-                    "contours": valid_contours,
-                    "brickGuess" : brick,
-                    "color" : average_color
-                }
                 await websocket.send_json(response)
                 print("Sent contours to client")
             except WebSocketDisconnect:

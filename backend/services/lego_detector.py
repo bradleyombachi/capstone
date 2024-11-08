@@ -3,6 +3,8 @@ import os
 import numpy as np
 import base64
 from rembg import remove
+from .lego_guesser import predictor
+import math
 
 # Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -12,6 +14,69 @@ model_dir = os.path.join(script_dir, '..', 'models/Densnet_169_20.keras')
 uploads_dir = os.path.join(script_dir, '..', 'uploads')
 input_dir = os.path.join(script_dir, '..', 'input')
 output_dir = os.path.join(script_dir, '..', 'output')
+
+
+
+KNOWN_COLORS = {
+    'Black': (0, 0, 0),
+    'White': (255, 255, 255),
+    
+    # Shades of Red
+    'Red': (255, 0, 0),
+    'Light Red': (255, 102, 102),
+    'Dark Red': (139, 0, 0),
+
+    # Shades of Green
+    'Green': (0, 255, 0),
+    'Light Green': (144, 238, 144),
+    'Dark Green': (0, 100, 0),
+
+    # Shades of Blue
+    'Blue': (0, 0, 255),
+    'Light Blue': (173, 216, 230),
+    'Dark Blue': (0, 0, 139),
+
+    # Shades of Yellow
+    'Yellow': (255, 255, 0),
+    'Light Yellow': (255, 255, 102),
+    'Dark Yellow': (204, 204, 0),
+
+    # Shades of Cyan
+    'Cyan': (0, 255, 255),
+    'Light Cyan': (224, 255, 255),
+    'Dark Cyan': (0, 139, 139),
+
+    # Shades of Magenta
+    'Magenta': (255, 0, 255),
+    'Light Magenta': (255, 102, 255),
+    'Dark Magenta': (139, 0, 139),
+
+    # Shades of Orange
+    'Orange': (255, 165, 0),
+    'Light Orange': (255, 200, 102),
+    'Dark Orange': (255, 140, 0),
+
+    # Shades of Purple
+    'Purple': (128, 0, 128),
+    'Light Purple': (216, 191, 216),
+    'Dark Purple': (75, 0, 130)
+}
+
+def euclidean_distance(color1, color2):
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(color1, color2)))
+
+def closest_color(input_color):
+    closest_name = None
+    min_distance = float('inf')
+    
+    for color_name, known_color in KNOWN_COLORS.items():
+        distance = euclidean_distance(input_color, known_color)
+        if distance < min_distance:
+            min_distance = distance
+            closest_name = color_name
+    
+    return closest_name
+
 
 # Function to calculate the average of pixels darker than 50
 def average_dark_color(image):
@@ -49,95 +114,56 @@ def remove_background(input_data):
 
 # Process the image and get contours and predictions
 def process_frame(image_data, model):
-    from .lego_guesser import predictor
-
-    print("Processing new frame...")
-
-    prediction_label = None
-    valid_contours = []
-
-    # Decode the base64 image data
+    # Decode base64-encoded image
+    contour_list = []
     nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
     image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-    # Remove the background from the image
-    image_no_bg = remove_background(image_data)
+    response = {"blocks": [], "full_contours": []}
 
-    image_rgb = cv2.cvtColor(image_no_bg, cv2.COLOR_BGR2RGB)
+    try:
+        # Process image
+        image_no_bg = remove_background(image_data)
+        image_gray = cv2.cvtColor(image_no_bg, cv2.COLOR_BGR2GRAY)
+        blurred_gray = cv2.GaussianBlur(image_gray, (5, 5), 0)
+        _, image_threshold = cv2.threshold(blurred_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        contours, _ = cv2.findContours(image_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    mask = cv2.inRange(image_no_bg, np.array([1, 1, 1]), np.array([255, 255, 255]))
+        # Process each contour
+        height, width, _ = image_no_bg.shape
+        for i, contour in enumerate(contours):
+            block = {}
+            x, y, w, h = cv2.boundingRect(contour)
+            contour_area = cv2.contourArea(contour)
+            if contour_area > 1300:
+                norm_x = x / width
+                norm_y = y / height
+                norm_w = w / width
+                norm_h = h / height
+                cropped_image = image_no_bg[y:y+h, x:x+w]
+                image_rgb = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB)
+                mask = cv2.inRange(cropped_image, np.array([1, 1, 1]), np.array([255, 255, 255]))
 
-    average_color = cv2.mean(image_rgb, mask=mask)[:3]  # [:3] ignores the alpha channel if present
+                # Get average color and predict label
+                avg_color = cv2.mean(image_rgb, mask=mask)[:3]
+                closest_color_name = closest_color(avg_color)
+                block["average_color"] = closest_color_name
+                position = [ norm_x, norm_y, norm_w, norm_h]
+                block["position"] = [ norm_x, norm_y, norm_w, norm_h]
+                contour_list.append(position)
 
+                try:
+                    prediction_label = predictor(cropped_image, model)
+                    block["prediction_label"] = prediction_label
+                except Exception as e:
+                    block["prediction_error"] = str(e)
 
-    # Ensure the background-removed image is valid
-    if image_no_bg is None:
-        raise ValueError("Background removal failed. Check the image data.")
+                response["blocks"].append(block)
 
-    # Convert the background-removed image to grayscale for contour detection
-    image_gray = cv2.cvtColor(image_no_bg, cv2.COLOR_BGR2GRAY)
-
-    # Apply Gaussian blur and thresholding to detect contours
-    blurred_gray = cv2.GaussianBlur(image_gray, (5, 5), 0)
-    _, image_threshold = cv2.threshold(blurred_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    # Find contours in the thresholded image
-    contours, _ = cv2.findContours(image_threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    height, width, _ = image_no_bg.shape
-    valid_contours = []
-    prediction_label = None
-
-    for contour in contours:
-        contour_area = cv2.contourArea(contour)
-        x, y, w, h = cv2.boundingRect(contour)
-        aspect_ratio = float(w) / h
-        edge_noise = x == 0 or y == 0 or (x + w) == width or (y + h) == height
-
-        # Filter valid contours by size, aspect ratio, and avoid edge noise
-        if contour_area > 1300 and aspect_ratio <= 6 and not edge_noise:
-            norm_x = x / width
-            norm_y = y / height
-            norm_w = w / width
-            norm_h = h / height
-            valid_contours.append([norm_x, norm_y, norm_w, norm_h])
-
-            # Crop the valid region from the image
-            cropped_image = image_no_bg[y:y + h, x:x + w]
-            avg_color = average_dark_color(cropped_image)
-
-            # Pad and equalize the cropped image for model prediction
-            if w > h:
-                pad = (w - h) // 2
-                cropped_image = cv2.copyMakeBorder(cropped_image, pad, pad, 0, 0, cv2.BORDER_CONSTANT, value=avg_color)
-            else:
-                pad = (h - w) // 2
-                cropped_image = cv2.copyMakeBorder(cropped_image, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=avg_color)
-            cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
-            cv2.imwrite(os.path.join(output_dir,'cropped.jpg'), cropped_image)
-
-            # Predict the label for the cropped image
-            try:
-                prediction_label = predictor(cropped_image, model)
-            except Exception as e:
-                print(f"Error during prediction: {e}")
-            print("Prediction:", prediction_label)
-
-    # Draw bounding boxes around the detected contours
-    image_with_boxes = image_input.copy()
-    for contour in valid_contours:
-        norm_x, norm_y, norm_w, norm_h = contour
-        x_scaled = int(norm_x * width)
-        y_scaled = int(norm_y * height)
-        w_scaled = int(norm_w * width)
-        h_scaled = int(norm_h * height)
-        cv2.rectangle(image_with_boxes, (x_scaled, y_scaled), (x_scaled + w_scaled, y_scaled + h_scaled), (0, 255, 0), 2)
-
-    # Save the output image with bounding boxes
-    output_image_path = os.path.join(output_dir, "output_with_boxes.jpg")
-    #cv2.imwrite(output_image_path, image_with_boxes)
-
-    return valid_contours, prediction_label, average_color
+        #response["full_contours"] = [[c[0][0] / width, c[0][1] / height] for c in contours]
+    except Exception as e:
+        response["error"] = str(e)
+    response["full_contours"] = contour_list
+    return response
 
 
 # Example usage:
