@@ -1,26 +1,61 @@
-import React, {useState} from 'react'
-import { ScrollView, Text, View, StyleSheet, Switch, TouchableOpacity } from 'react-native'
+import React, {useEffect, useState} from 'react'
+import { ScrollView, Text, View, StyleSheet, Switch, TouchableOpacity, Modal, Button } from 'react-native'
 import { useTheme } from '../contexts/ThemeContext'
+import { useFontSize } from '../contexts/FontContext';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 // import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Entypo } from '@expo/vector-icons';
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+} from 'react-native-popup-menu';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import ColorPicker, { Panel3, Swatches, Preview, OpacitySlider, HueSlider } from 'reanimated-color-picker';
+import { useColor } from '../contexts/ColorContext';
 
+
+const fontSizes = {
+  sm: 12,
+  md: 16,
+  lg: 20,
+};
 
 const Settings = () => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const { customFontSize = 'md', setSmall, setMedium, setLarge } = useFontSize();
+  const fontSizeLabel = customFontSize === 'sm' ? 'Small' : customFontSize === 'md' ? 'Medium' : 'Large';
+  const [showModal, setShowModal] = useState(false);
+  const [language, setLanguage] = useState('en')
+  const languageLabel = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'English';
+  const {colorHex, setColorHex} = useColor();
+  const [brightness, setBrightness] = useState(1);
+
+    const getFontSize = (size: string) => fontSizes[size as keyof typeof fontSizes];
+
+
+
+  const onSelectColor = ({ hex }: { hex: string }) => {
+    setColorHex(hex);
+  };
+  
+  useEffect(()=> {
+    console.log(`HEX: ${colorHex}`)
+  }, [colorHex])
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2'}]}>
       <Text style={[styles.title, {color: isDarkMode ? 'white' : 'black'}]}>Settings</Text>
       
       <ScrollView scrollEnabled={false}>
       <Text style={[styles.visibility, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>VISIBILITY</Text>
       <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
         <View style = {styles.listItem}>
-          <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>High Contrast Mode</Text>
+          <Text style = {[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}>High Contrast Mode</Text>
           <View style={styles.highContrast}>
           <Switch
-        trackColor={{false: '#767577', true: '#1abc9c'}}
+        trackColor={{false: '#767577', true: colorHex}}
         thumbColor={isDarkMode ? 'white' : 'white'}
         ios_backgroundColor="#3e3e3e"
         onValueChange={toggleTheme}
@@ -29,54 +64,128 @@ const Settings = () => {
         </View>
         </View>
         <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
-        <TouchableOpacity style={styles.listItem}>
-          <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Font Size </Text>
-          <View style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end'}}>
+        <View style={styles.listItem}>
+          <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}> Font Size </Text>
+          <Menu style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end', borderRadius: 50}}>
+            <MenuTrigger 
+            children={
+              <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>
+              {fontSizeLabel}
+            </Text>
+          }
+            />
+            <View style={{justifyContent: 'center'}}>
+            <Entypo name="select-arrows" size={16} color="#787878" />
+            </View>
+            <MenuOptions   customStyles={{
+                  optionWrapper: {
+                    backgroundColor: isDarkMode ? 'black' : 'white',
+                  },
+                  optionText: {
+                    color: '#787878',
+                    fontSize: getFontSize(customFontSize)
+                  },
+                }}>
+              <MenuOption onSelect={setSmall} >
+                <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>Small</Text>
+              </MenuOption>
+              <MenuOption onSelect={setMedium} >
+                <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>Medium</Text>
+              </MenuOption>
+              <MenuOption onSelect={setLarge} >
+                <Text style={{color: '#787878', fontSize: getFontSize(customFontSize)}}>Large</Text>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+          {/* <View style={{flex: 1, flexDirection:'row', justifyContent: 'flex-end'}}>
             <Text style={{color: '#787878', fontSize: 16}}>
-              16
+              Medium
             </Text>
             <View style={{justifyContent: 'center'}}>
           <Entypo name="select-arrows" size={16} color="#787878" />
           </View>
-          </View>
-        </TouchableOpacity>
+          </View> */}
+        </View>
 
         <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
 
         <View style={styles.listItem}>
-        <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}> Color Theme </Text>
-        <View style={{flex: 1, alignItems: 'flex-end', backgroundColor: "#1abc9c", marginLeft: 160, borderRadius: 10}}>
-          <Text>   </Text>
+        <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}> Color Theme </Text>
+        <View style={{flex: 1, alignItems: 'flex-end', marginLeft: 130, borderRadius: 10}}>
+            <View style={styles.colorPicker}>
+            <Modal 
+              visible={showModal} 
+              animationType='slide'
+              transparent={true}
+              onRequestClose={() => setShowModal(false)} 
+              >
+               <View style={styles.modalContainer}>
+                  <ColorPicker style={{ width: '70%' }} value={colorHex} onComplete={onSelectColor}>
+                    <Preview style={{marginBottom: 20, borderRadius: 50}} hideInitialColor/>
+                    <Panel3 style={{marginBottom: 20}}/>
+                  </ColorPicker>
+                  <View style={{flexDirection: 'row'}}>
+                  <Button title='Apply' onPress={() => {
+                    setShowModal(false);
+                  }} color="white"/>
+                  </View>
+              </View>
+
+            </Modal>
           </View>
+          <TouchableOpacity onPress={() => setShowModal(true)}>         
+            <FontAwesome name="circle" size={30} color={colorHex} />
+          </TouchableOpacity>
         </View>
+      </View>
       </View>
 
       <Text style={[styles.audio, {color: isDarkMode ? '#bdbdbd': '#787878'}]}>AUDIO</Text>
       <View style = {[styles.listContainer, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
           <View style={styles.volumeText}>
-            <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>
+            <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}>
               Volume
             </Text>
           </View>
             <View style={styles.volumeSliderContainer}>
               <MultiSlider
-              selectedStyle={{backgroundColor: '#1abc9c'}}
+              selectedStyle={{backgroundColor: colorHex}}
                 />
             </View>
     <View style={[styles.divider, {backgroundColor: isDarkMode ? '#4a4a4a' : '#e8e8e8'}]}></View>
             <View style={styles.listItem}>
-              <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black'}]}>
+              <Text style={[styles.listText, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize(customFontSize)}]}>
                 Voice Language
               </Text>
-              <View style={{flex: 1, alignItems: 'flex-end'}}>
-                <Text style={styles.languageText}>
-                  English
-                </Text>
-              </View>
-            </View>
-            
+              <Menu style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end', borderRadius: 50 }}>
+          <MenuTrigger>
+            <Text style={{ color: '#787878', fontSize: getFontSize(customFontSize) }}>
+              {languageLabel}
+            </Text>
+          </MenuTrigger>
+          <View style={{ justifyContent: 'center' }}>
+            <Entypo name="select-arrows" size={16} color="#787878" />
+          </View>
+          <MenuOptions customStyles={{
+            optionWrapper: {
+              backgroundColor: isDarkMode ? 'black' : 'white',
+            },
+            optionText: {
+              color: '#787878',
+              fontSize: getFontSize(customFontSize),
+            },
+          }}>
+            <MenuOption onSelect={() => setLanguage('en')}>
+              <Text style={{ color: '#787878', fontSize: getFontSize(customFontSize) }}>English</Text>
+            </MenuOption>
+            <MenuOption onSelect={() => setLanguage('es')}>
+              <Text style={{ color: '#787878', fontSize: getFontSize(customFontSize) }}>Spanish</Text>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
+            </View>    
       </View>
-      </ScrollView>
+  </ScrollView>
     </View>
   )
 }
@@ -134,7 +243,7 @@ const styles = StyleSheet.create({
     
   },
   volumeText: {
-        //flex: 1,
+    //flex: 1,
     //backgroundColor: 'red',
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -157,7 +266,21 @@ const styles = StyleSheet.create({
   languageText: {
     color: "#787878",
     fontSize: 16,
-  }
-
+  },
+  menuBox: 
+  {
+    backgroundColor: 'blue'
+  },
+  colorPicker: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+  },
 
 });

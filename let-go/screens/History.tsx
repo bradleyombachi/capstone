@@ -1,81 +1,118 @@
-import React from 'react'
-import { Text, View, StyleSheet, FlatList, Image } from 'react-native'
+import React, { useContext } from 'react'
+import { Text, View, StyleSheet, FlatList, Image, TouchableOpacity, Modal } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext'
 import { useState, useRef, useEffect } from 'react';
+import { HistoryContext } from '../contexts/HistoryContext';
 import axios from 'axios';
-
-type ItemData = {
-  id: string; 
-  brickName: string;
-  brickDescription: string;
-  date: string;
-}
-const DATA: ItemData[] = [
-  {
-    id: '1',
-    brickName: 'First Item',
-    date: '4/22/2024',
-    brickDescription: 'Brick Corner 2x2'
-  },
-  {
-    id: '2',
-    brickName: 'Second Item',
-    date: '4/22/2024',
-    brickDescription: 'Brick Corner 2x2'
-  },
-  {
-    id: '3',
-    brickName: 'Third Item',
-    date: '4/22/2024',
-    brickDescription: 'Brick Corner 1x2x2'
-  },
-];
+import { useColor } from '../contexts/ColorContext'
+import { useFontSize } from '../contexts/FontContext';
 
 type ItemProps = {
-  brickName: string,
-  date: string,
+  brickColor: string,
+  time: string,
   brickDescription: string,
   isDarkMode: boolean
+  photo: string
+  color: string
+  onImagePress: () => void
+  customFontSize: string
 };
 
+const fontSizes1 = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+}
 
-const Item = ({brickName, date, brickDescription, isDarkMode}: ItemProps) => (
-  <View style={[styles.item, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}>
-    <View style={{flex: 1, flexDirection: 'row'}}>
-      <Image source={require('../assets/legopic.jpg')} style={styles.brickImage} />
+const fontSizes2 = {
+  sm: 10,
+  md: 14,
+  lg: 18,
+}
+
+const fontSizes3 = {
+  sm: 9,
+  md: 13,
+  lg: 17,
+}
+
+const getFontSize1 = (size: string) => fontSizes1[size as keyof typeof fontSizes1];
+
+const getFontSize2 = (size: string) => fontSizes2[size as keyof typeof fontSizes2];
+
+const getFontSize3 = (size: string) => fontSizes3[size as keyof typeof fontSizes3];
+
+const Item = ({brickColor, time, brickDescription, isDarkMode, photo, color, onImagePress, customFontSize}: ItemProps) => (
+  <TouchableOpacity 
+    style={[styles.item, {backgroundColor: isDarkMode ? '#1a1a1a' : 'white'}]}
+    onPress={onImagePress}>
+    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+      <Image 
+        source={{ uri: `data:image/jpeg;base64,${photo}` }} 
+        style={styles.brickImage} 
+      />
       <View>
-        <Text style={[styles.brickName, {color: isDarkMode ? 'white' : 'black'}]}>{brickName}</Text>
-        <Text style={[styles.brickDescription, {color: isDarkMode ? '#bfbdbd' : '#5c5b5b'}]}>{brickDescription}</Text>
-        <Text style={styles.date}>{date}</Text>
+        <Text style={[styles.brickColor, {color: isDarkMode ? 'white' : 'black', fontSize: getFontSize1(customFontSize)}]}>{brickColor}</Text>
+        <Text style={[styles.brickDescription, {color: isDarkMode ? '#bfbdbd' : '#5c5b5b', fontSize: getFontSize2(customFontSize)}]}>{brickDescription}</Text>
+        <Text style={[styles.time, { fontSize: getFontSize3(customFontSize)}]}>{time}</Text>
       </View>
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'flex-end'}}>
-        <MaterialIcons name="navigate-next" size={24} color="#1abc9c" />
+        <MaterialIcons name="navigate-next" size={24} color={color} />
       </View>
     </View>
-
-  </View>
+  </TouchableOpacity>
 );
 
 const History = () => {
   const { isDarkMode } = useTheme();
- 
+  const { history } = useContext(HistoryContext)
+  const { colorHex } = useColor()
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
+  const { customFontSize } = useFontSize()
+
+  const handleImagePress = (photo: string) => {
+    setSelectedImage(photo);
+    setShowModal(true);
+  };
+
   return (
     <View style = {[styles.container, { backgroundColor: isDarkMode ? 'black' : '#f2f2f2' }]}>
-      <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black' }]}>History</Text>
+      <Text style={[styles.title, { color: isDarkMode ? 'white' : 'black', fontSize: 30}]}>History</Text>
       <View style={styles.listItemsContainer}>
       <FlatList
-        data={DATA}
+        data={[...history].reverse()}
         renderItem={({item}) => 
         <Item 
-        brickName={item.brickName} 
-        date={item.date}
-        brickDescription={item.brickDescription}
+        brickColor={item.color} 
+        time={item.time}
+        brickDescription={item.guess}
         isDarkMode={isDarkMode}
+        photo={item.photo}
+        color = {colorHex}
+        onImagePress={() => handleImagePress(item.photo)}
+        customFontSize={customFontSize}
         />}
-        keyExtractor={item => item.id}
+        keyExtractor={(item, index) => index.toString()} // Unique key for each item
       />
       </View>
+
+      <Modal
+        visible={showModal}
+        transparent={true}
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Image 
+            source={{ uri: `data:image/jpeg;base64,${selectedImage}` }} 
+            style={styles.modalImage} 
+          />
+          <TouchableOpacity onPress={() => setShowModal(false)}>
+            <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -92,7 +129,6 @@ const styles = StyleSheet.create({
   },
   title: {
     paddingTop: 80,
-    fontSize: 30,
     fontWeight: '700',
     paddingLeft: 30
 
@@ -114,12 +150,10 @@ const styles = StyleSheet.create({
     gap: 4,
     borderRadius: 15,
   },
-  brickName: {
-    fontSize: 20,
+  brickColor: {
     fontWeight: '600'
   },
-  date: {
-    fontSize: 13,
+  time: {
     color: '#7a7878'
   },
   brickImage: {
@@ -127,13 +161,23 @@ const styles = StyleSheet.create({
     height: 70,
     marginRight: 10,
     borderRadius: 5,
-    backgroundColor: 'black'
+    backgroundColor: 'black',
+    alignItems: 'center'
   },
   brickDescription: {
     color: '#5c5b5b',
     fontWeight: '500'
-  }
-
-  
-
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalImage: {
+    width: 300,
+    height: 300,
+    marginBottom: 20,
+    borderRadius: 20
+  },
 });

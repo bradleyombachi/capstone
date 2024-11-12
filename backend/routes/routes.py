@@ -4,8 +4,11 @@ from services import process_frame
 import os
 import base64
 import tensorflow as tf
+import math
+import json
 
 router = APIRouter()
+
 
 @router.get("/")
 async def test():
@@ -62,9 +65,14 @@ input_dir = os.path.join(script_dir, '..', 'input')
 bg_image_name = "background_backlit_B.jpg"
 bg_image_path = os.path.join(input_dir, bg_image_name)
 
+
 @router.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+
+    # Log whether the connection is using wss or ws
+    protocol = 'wss' if websocket.url.scheme == 'wss' else 'ws'
+    print(f"WebSocket connection established using {protocol}://")
 
     # load the model on booting 
     try: 
@@ -78,8 +86,9 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 data = await websocket.receive_text()
                 print("Received data from client")
-                valid_contours = process_frame(data, bg_image_path, model)
-                await websocket.send_json(valid_contours)
+                response = process_frame(data, model)
+
+                await websocket.send_json(response)
                 print("Sent contours to client")
             except WebSocketDisconnect:
                 print("Client disconnected")
