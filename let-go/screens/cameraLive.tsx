@@ -51,7 +51,7 @@ export default function CameraViewTest() {
   };
 
   useEffect(() => {
-    const ws = new WebSocket('ws://10.125.218.50:8000/ws');
+    const ws = new WebSocket('ws://10.4.148.9:8000/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -61,23 +61,25 @@ export default function CameraViewTest() {
     ws.onmessage = async (e) => {
         const response: any = JSON.parse(e.data);
         console.log(response);
-       const boxes:BoundingBox[] = response["full_contours"];  // Access contours directly
-        
+        const boxes:BoundingBox[] = response["full_contours"];  // Access contours directly
+        setGuessLabel([]);
         console.log('Received boxes:', boxes);
+        updateAnimatedBoxes(boxes);
         //if ( boxes.every(box => box.length === 4 )) {
-          for (let i = 0; i < response.length - 1; i++) {
-            console.log("michael mom is a whore");
-            let color = response["blocks"][i][0];
-            let contours_list = response["blocks"][i][1];
-            let prediction = response["blocks"][i][2];
-            console.log("Current data:", { color, contours_list, prediction });
-            updateAnimatedBoxes(boxes);
-            setBoundingBoxes(contours_list);
-            let label = color+" "+prediction;
+          for (let i = 0; i < response.blocks.length; i++) {
+            const block = response.blocks[i];
+            console.log("test");
+            // Set variables for each part
+            const color = block.average_color;
+            const position = block.position;
+            const predictionLabel = block.prediction_label;
+            setBoundingBoxes(position);
+
+            const label = color+" "+predictionLabel;
             addNewLabel(label);
 
 
-            Speech.speak(label[i], {language: language});
+            Speech.speak(label, {language: language});
             setIsLoading(false);
 
           if (cameraRef.current && isFocused) {
@@ -118,7 +120,7 @@ export default function CameraViewTest() {
         console.log(`WebSocket connection closed: ${event.code}`);
         if (event.code !== 1000) { // Reconnect if the close code is not normal
           setTimeout(() => {
-            wsRef.current = new WebSocket('ws://10.125.218.50:8000/ws');
+            wsRef.current = new WebSocket('ws://10.4.148.9:8000/ws');
           }, 100); // Try to reconnect after 1 second
         }
     };
@@ -237,7 +239,7 @@ export default function CameraViewTest() {
             zIndex: 1,
           }}
         >
-          {guessLabel[0]}
+          {guessLabel[index]}
         </Animated.Text>
         
         <Animated.View

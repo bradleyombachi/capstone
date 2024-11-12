@@ -60,8 +60,9 @@ def predictor(image_data, model):
         'roof tile 1x4': 39,
         'roof tile 2x2': 40,
         'roof tile 2x3': 41,
-        'roof tile inside 3x3': 42,
-        'roof tile outside 3x3': 43,
+        #originally 3x3 hardcoded
+        'roof tile inside 2x3': 42,
+        'roof tile outside 2x3': 43,
         'round brick 1x1': 44,
         'technic brick 1x2': 45}
 
