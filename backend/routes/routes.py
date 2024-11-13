@@ -32,7 +32,6 @@ async def upload_file(payload: ImagePayload):
         header, encoded = payload.data.split(",", 1)
         file_data = base64.b64decode(encoded)
 
-        # Define the file path
         file_path = os.path.join(UPLOAD_DIR, payload.filename)
 
         # Write the file to the uploads directory
@@ -52,16 +51,12 @@ async def upload_file(payload: ImagePayload):
 
 
 
-# Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Construct the path to the uploads directory
 model_dir = os.path.join(script_dir, '..', 'models/Densnet_169_20.keras')
 
-# construct the path to input dir
 input_dir = os.path.join(script_dir, '..', 'input')
 
-# construct the full path to the bg image 
 bg_image_name = "background_backlit_B.jpg"
 bg_image_path = os.path.join(input_dir, bg_image_name)
 
@@ -70,7 +65,6 @@ bg_image_path = os.path.join(input_dir, bg_image_name)
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
-    # Log whether the connection is using wss or ws
     protocol = 'wss' if websocket.url.scheme == 'wss' else 'ws'
     print(f"WebSocket connection established using {protocol}://")
 

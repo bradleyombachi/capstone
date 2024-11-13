@@ -8,7 +8,6 @@ export const HistoryProvider = ({ children }) => {
   const addToHistory = (item) => {
     if (item && item.guess && item.color && item.photo && item.time) {
       setHistory(prevHistory => {
-        //console.log("HISTORY LENGTH: " + prevHistory.length)
         if (prevHistory.length < 10) {
           return [...prevHistory, item];
         } else {

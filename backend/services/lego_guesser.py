@@ -10,14 +10,11 @@ from sklearn.cluster import KMeans
 import tensorflow as tf
 import cv2
 
-# Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Construct the path to the uploads directory
 model_dir = os.path.join(script_dir, '..', 'models/predictLego_2024_sep.keras')
 
 def predictor(image_data, model): 
-    # array of labels 
     labels = {'beam 1m': 0,
         'beam 1x2': 1,
         'brick 1x1': 2,
@@ -69,7 +66,6 @@ def predictor(image_data, model):
     if image_data.ndim == 2:  # If the image is grayscale
         image_data = cv2.cvtColor(image_data, cv2.COLOR_GRAY2RGB)
     
-    # Ensure the image is resized to 224x224
     image_data = cv2.resize(image_data, (224, 224))
 
     # Convert the image into a numpy array if it's not already
@@ -81,7 +77,6 @@ def predictor(image_data, model):
     # Predict using the model
     prediction = model.predict(image_array)
 
-    # Get the index of the predicted class with the highest probability
     predicted_class = np.argmax(prediction, axis=1)[0]
 
     # Get the class label from your training data

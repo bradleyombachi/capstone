@@ -94,7 +94,7 @@ const History = () => {
         onImagePress={() => handleImagePress(item.photo)}
         customFontSize={customFontSize}
         />}
-        keyExtractor={(item, index) => index.toString()} // Unique key for each item
+        keyExtractor={(item, index) => index.toString()}
       />
       </View>
 

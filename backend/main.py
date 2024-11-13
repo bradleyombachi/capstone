@@ -41,6 +41,5 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(api_router)
 
-# run the file manually to test on ios
 if __name__ == "__main__":
-    uvicorn.run(app, host="10.4.148.9", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

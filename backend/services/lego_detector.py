@@ -6,10 +6,8 @@ from rembg import remove
 from .lego_guesser import predictor
 import math
 
-# Get the current script directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Construct the path to necessary directories
 model_dir = os.path.join(script_dir, '..', 'models/Densnet_169_20.keras')
 uploads_dir = os.path.join(script_dir, '..', 'uploads')
 input_dir = os.path.join(script_dir, '..', 'input')
@@ -88,33 +86,28 @@ def average_dark_color(image):
 # Remove the background and return the image in OpenCV format
 def remove_background(input_data):
     output_path = os.path.join(output_dir,'output.jpg')
-    # Ensure input_data is bytes
     if isinstance(input_data, str):
         input_data = base64.b64decode(input_data)
     
-    result = remove(input_data, force_return_bytes=True)  # Force return bytes
+    result = remove(input_data, force_return_bytes=True)  
 
     # Convert byte string to a NumPy array and decode as an image
     nparr = np.frombuffer(result, np.uint8)
-    image_no_bg = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)  # Supports transparency if PNG
+    image_no_bg = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
     
-    # Check if the image was properly decoded
     if image_no_bg is None:
         raise ValueError("Failed to decode the image after background removal.")
     
-    #cv2.imwrite(output_path, image_no_bg)
 
     
     image_no_bg_bgr = cv2.cvtColor(image_no_bg, cv2.COLOR_BGRA2BGR)
 
-    # Save the output image
-    #cv2.imwrite(output_path, image_no_bg_bgr)
+
 
     return image_no_bg_bgr
 
 # Process the image and get contours and predictions
 def process_frame(image_data, model):
-    # Decode base64-encoded image
     contour_list = []
     nparr = np.frombuffer(base64.b64decode(image_data), np.uint8)
     image_input = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -159,14 +152,8 @@ def process_frame(image_data, model):
 
                 response["blocks"].append(block)
 
-        #response["full_contours"] = [[c[0][0] / width, c[0][1] / height] for c in contours]
     except Exception as e:
         response["error"] = str(e)
     response["full_contours"] = contour_list
     return response
 
-
-# Example usage:
-# user_image_name = "318B2DF1-B57C-4033-9547-FBDFF6F2FA9C.jpg"
-# user_image_path = os.path.join(uploads_dir, user_image_name)
-# valid_contours, prediction = process_frame(user_image_path, model)

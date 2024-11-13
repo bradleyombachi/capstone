@@ -61,11 +61,10 @@ export default function CameraViewTest() {
     ws.onmessage = async (e) => {
         const response: any = JSON.parse(e.data);
         console.log(response);
-        const boxes:BoundingBox[] = response["full_contours"];  // Access contours directly
+        const boxes:BoundingBox[] = response["full_contours"];  
         setGuessLabel([]);
         console.log('Received boxes:', boxes);
         updateAnimatedBoxes(boxes);
-        //if ( boxes.every(box => box.length === 4 )) {
           for (let i = 0; i < response.blocks.length; i++) {
             const block = response.blocks[i];
             console.log("test");
@@ -85,10 +84,9 @@ export default function CameraViewTest() {
           if (cameraRef.current && isFocused) {
             try {
                   const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 1.0, exif: false });
-                  console.log('Captured photo:', photo.uri); // Log or use the photo (e.g., send via WebSocket)
-                  const base64Photo = photo.base64; // Store the base64 of the photo
+                  console.log('Captured photo:', photo.uri); 
+                  const base64Photo = photo.base64; 
                   const time = getCurrentTimeInSeconds();
-                  // Add base64 photo to history
                   addToHistory({ 
                       guess: label, 
                       color: color, 
@@ -103,12 +101,9 @@ export default function CameraViewTest() {
             else {
               console.error("Invalid bounding box format received: ", boxes)
           }
-          //}
   
           }
-          // updateAnimatedBoxes(boxes);
-          // setBoundingBoxes(boxes);
-          // setguessLabel(response["color"]+ " " + response["brickGuess"]);
+          
           
     };
 
@@ -118,10 +113,10 @@ export default function CameraViewTest() {
   
     ws.onclose = (event) => {
         console.log(`WebSocket connection closed: ${event.code}`);
-        if (event.code !== 1000) { // Reconnect if the close code is not normal
+        if (event.code !== 1000) {
           setTimeout(() => {
             wsRef.current = new WebSocket('ws://3.15.48.29:8000/ws');
-          }, 100); // Try to reconnect after 1 second
+          }, 100); 
         }
     };
   
@@ -143,13 +138,7 @@ export default function CameraViewTest() {
     return () => clearInterval(interval);
   }, [isFocused, permission?.granted]);
 
-  // useEffect(() => {
-  //   if (history && Array.isArray(history)) {
-  //     console.log("HISTORY:", history);
-  //   } else {
-  //     console.error("History is not an array or is undefined");
-  //   }
-  // }, [history]);
+ 
 
   const sendFrameToServer = async () => {
     if (cameraRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
@@ -213,7 +202,6 @@ export default function CameraViewTest() {
     );
   }
 
-  // feature for flash light
   const toggleTorch = () => {
     setTorch(prevTorch => prevTorch === FlashMode.off ? FlashMode.torch : FlashMode.off)
 };
