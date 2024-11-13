@@ -67,7 +67,6 @@ export default function CameraViewTest() {
         updateAnimatedBoxes(boxes);
           for (let i = 0; i < response.blocks.length; i++) {
             const block = response.blocks[i];
-            console.log("test");
             // Set variables for each part
             const color = block.average_color;
             const position = block.position;
@@ -208,7 +207,7 @@ export default function CameraViewTest() {
 
   const renderAnimatedBoxes = () => {
     return boundingBoxes.map((_, index) => {
-      console.log(`BOX INDEX: ${index}`)
+
       const animBox = animatedBoxesRef.current.get(index);
       if (!animBox) return null;
       return (
