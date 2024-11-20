@@ -120,3 +120,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## 💡 Credits
 This project was developed by a team of dedicated students to provide a meaningful solution for LEGO enthusiasts and users with accessibility needs. Special thanks to everyone who contributed to its success!
+
+## 🤝 The Dream Team
+<img src="let-go/assets/team-pic.jpeg" width="400" height="auto" alt="Team picture">
+
