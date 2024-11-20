@@ -1,6 +1,6 @@
 # LEGO Brick Identifier
 
-![LEGO Brick Identifier Logo](images/logo.png)
+![LEGO Brick Identifier Logo](let-go/assets/logo.png)
 
 A real-time LEGO brick detection app designed for accessibility, featuring advanced computer vision and user-friendly functionalities.
 
@@ -16,15 +16,18 @@ A real-time LEGO brick detection app designed for accessibility, featuring advan
 * [Credits](#credits)
 
 ## 📝 Overview
+![Sytem Overview](let-go/assets/system-design.png)
 The **LEGO Brick Identifier** is an innovative application leveraging **deep learning** and **computer vision** to detect and identify LEGO bricks in real-time. It is built with accessibility in mind, ensuring usability for individuals with color blindness or coordination challenges.
 
 ### Key Highlights
+![Use Case ](let-go/assets/use-case.png)
+
 * Real-time identification of LEGO pieces
 * Color detection for improved accessibility
 * Text-to-speech functionality for auditory feedback
 
 ## ✨ Features
-![Feature Demo](images/demo.png)
+![Feature Demo](let-go/assets/demo.png)
 
 * **Real-Time Detection**: Utilizes DenseNet to identify LEGO pieces from live camera input
 * **Color Identification**: Distinguishes LEGO piece colors with enhanced precision
@@ -78,7 +81,7 @@ uvicorn main:app --reload
 
 2. Start the frontend:
 ```bash
-npm start
+npx expo start --tunnel
 ```
 
 3. Open your browser and navigate to `http://localhost:3000`
