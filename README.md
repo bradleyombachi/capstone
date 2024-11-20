@@ -1,6 +1,6 @@
 # LEGO Brick Identifier
 
-![LEGO Brick Identifier Logo](let-go/assets/logo.png)
+<img src="let-go/assets/logo.png" width="200" height="auto" alt="LEGO Brick Identifier Logo">
 
 A real-time LEGO brick detection app designed for accessibility, featuring advanced computer vision and user-friendly functionalities.
 
@@ -16,11 +16,12 @@ A real-time LEGO brick detection app designed for accessibility, featuring advan
 * [Credits](#credits)
 
 ## 📝 Overview
-![Sytem Overview](let-go/assets/system-design.png)
+<img src="let-go/assets/system-design.png" width="600" height="auto" alt="System Overview">
+
 The **LEGO Brick Identifier** is an innovative application leveraging **deep learning** and **computer vision** to detect and identify LEGO bricks in real-time. It is built with accessibility in mind, ensuring usability for individuals with color blindness or coordination challenges.
 
 ### Key Highlights
-![Use Case ](let-go/assets/use-case.png)
+<img src="let-go/assets/use-case.png" width="400" height="auto" alt="Use Case">
 
 * Real-time identification of LEGO pieces
 * Color detection for improved accessibility
