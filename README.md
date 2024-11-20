@@ -27,7 +27,7 @@ The **LEGO Brick Identifier** is an innovative application leveraging **deep lea
 * Text-to-speech functionality for auditory feedback
 
 ## ✨ Features
-<img src="let-go/assets/demo.png" width="800" height="auto" alt="Feature Demo">
+<img src="let-go/assets/demo.png" width="400" height="auto" alt="Feature Demo">
 
 * **Real-Time Detection**: Utilizes DenseNet to identify LEGO pieces from live camera input
 * **Color Identification**: Distinguishes LEGO piece colors with enhanced precision
